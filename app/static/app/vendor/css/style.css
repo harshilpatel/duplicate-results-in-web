@@ -1,0 +1,569 @@
+
+/*---End-header----*/
+
+/*-------LOGIN STARTS HERE -------*/
+/* Login Container (default to float:right) */
+#loginContainer {
+    position: relative;
+    float: left;
+    z-index: 999999999;
+}
+
+#loginBox:before, #signupBox:before {
+    content: '';
+    position: absolute;
+    right: 25px;
+    text-align: center;
+    top: -21px;
+    border-left: 20px solid rgba(0, 0, 0, 0);
+    border-right: 20px solid rgba(0, 0, 0, 0);
+    border-bottom: 20px solid #222;
+}
+/* Login Button */
+#loginButton {
+    display: inline-block;
+    float: right;
+    position: relative;
+    z-index: 30;
+    cursor: pointer;
+    transition: 0.5s all;
+    -webkit-transition: 0.5s all;
+    -moz-transition: 0.5s all;
+    -o-transition: 0.5s all;
+}
+    /* Login Button Text */
+    #loginButton span {
+        display: block;
+        margin-top: 5px;
+        text-align: center;
+        border-radius: 0.15em;
+        -webkit-border-radius: 0.15em;
+        -moz-border-radius: 0.15em;
+        -o-border-radius: 0.15em;
+        font-family: 'Open Sans', sans-serif;
+    }
+/* Login Box */
+#loginBox {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    display: none;
+    z-index: 999;
+    padding-bottom: 0.8em;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -o-border-radius: 5px;
+    -moz-border-radius: 5px;
+    box-shadow: inset 0px -2px 2px #DFDFDF;
+}
+/* If the Login Button has been clicked */
+
+
+/* Login Form */
+#loginForm {
+    width: 300px;
+    z-index: 0;
+}
+
+    #loginForm fieldset {
+        margin: 0 0 0px 0;
+        display: block;
+        border: 0;
+        padding: 0;
+    }
+
+fieldset#body {
+    background: #fff;
+    padding: 20px;
+    margin: 0;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -o-border-radius: 5px;
+    -moz-border-radius: 5px;
+}
+
+#loginForm #checkbox {
+    width: auto;
+    margin: 7px 9px 0 0;
+    float: left;
+    padding: 0;
+    border: 0;
+    *margin: -3px 9px 0 0; /* IE7 Fix */
+}
+
+#loginForm #body fieldset label {
+    display: block;
+    color: #777;
+    font-size: 0.875em;
+    font-weight: normal;
+    text-align: center;
+    text-transform: uppercase;
+    line-height: 1.5em;
+    font-family: 'Open Sans', sans-serif;
+}
+/* Default Input */
+#loginForm input, #signupForm input[type="text"], #signupForm input[type="password"] {
+    width: 93.6%;
+    color: #3a454d;
+    padding: 8px 8px;
+    margin: 0.3em 0;
+    border: 1px solid #D8D8D8;
+    font-size: 0.875em;
+    transition: border-color 0.5s all;
+    -webkit-transition: border-color 0.5s all;
+    -moz-transition: border-color 0.5s all;
+    -o-transition: border-color 0.5s all;
+    border-radius: 0.15em;
+    -webkit-border-radius: 0.15em;
+    -moz-border-radius: 0.15em;
+    -o-border-radius: 0.15em;
+    font-family: 'Open Sans', sans-serif;
+}
+
+    #loginForm input:hover {
+        border: 1px solid #999;
+    }
+
+.remeber {
+    margin-top: 0.5em;
+}
+/* Sign In Button */
+#loginForm #login, #signupForm #signup {
+    color: #fff;
+    font-size: 0.875em;
+    font-weight: normal;
+    padding: 10px 15px;
+    text-transform: uppercase;
+    display: inline-block;
+    width: 100%;
+    cursor: pointer;
+    margin: 1em 0 0 0;
+    border: none;
+    -webkit-transition: all 0.3s ease-out;
+    -moz-transition: all 0.3s ease-out;
+    -ms-transition: all 0.3s ease-out;
+    -o-transition: all 0.3s ease-out;
+    transition: all 0.3s ease-out;
+    border-radius: 0.15em;
+    -webkit-border-radius: 0.15em;
+    -moz-border-radius: 0.15em;
+    -o-border-radius: 0.15em;
+    font-family: 'Open Sans', sans-serif;
+}
+
+#loginButton span:hover {
+    color: #FFF;
+}
+
+#loginForm #login:hover {
+    background: #3D3D3D;
+}
+
+#signupForm #signup:hover {
+    background: #3D3D3D;
+}
+/* Forgot your password */
+#loginForm span {
+    display: block;
+    background: #fff;
+    padding: 0px 0px 0px 13px;
+}
+
+    #loginForm span a {
+        color: #777;
+        font-size: 0.875em;
+        font-family: 'Open Sans', sans-serif;
+    }
+
+input:focus {
+    outline: none;
+}
+/* signup Container (default to float:right) */
+#signupContainer {
+    position: relative;
+    float: left;
+    z-index: 999999999;
+}
+
+/* Login Button */
+#signupButton {
+    display: inline-block;
+    float: right;
+    margin-top: 5px;
+    position: relative;
+    z-index: 30;
+    cursor: pointer;
+    transition: 0.5s all;
+    -webkit-transition: 0.5s all;
+    -moz-transition: 0.5s all;
+    -o-transition: 0.5s all;
+}
+    /* Login Button Text */
+    #signupButton span {
+        display: block;
+        text-align: center;
+        font-family: 'Open Sans', sans-serif;
+    }
+/* Login Box */
+#signupBox {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    display: none;
+    z-index: 999;
+    padding-bottom: 0.8em;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -o-border-radius: 5px;
+    -moz-border-radius: 5px;
+    box-shadow: inset 0px -2px 2px #DFDFDF;
+}
+/* If the Login Button has been clicked */
+#signupButton.active {
+    border-radius: 0.15em;
+}
+
+.active span:hover {
+    color: #FFF;
+}
+/* Login Form */
+#signupForm {
+    width: 300px;
+    z-index: 999;
+}
+
+    #signupForm fieldset {
+        margin: 0 0 0px 0;
+        display: block;
+        border: 0;
+        padding: 0;
+    }
+
+fieldset#signupbody {
+    background: #fff;
+    padding: 20px;
+    margin: 0;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -o-border-radius: 5px;
+    -moz-border-radius: 5px;
+}
+
+#signupForm #checkbox {
+    width: auto;
+    margin: 7px 9px 0 0;
+    float: left;
+    padding: 0;
+    border: 0;
+    *margin: -3px 9px 0 0; /* IE7 Fix */
+}
+
+#signupbody label {
+    color: #777777;
+    display: block;
+    float: left;
+    line-height: 1.5em;
+}
+
+#signupForm #signupbody fieldset label {
+    display: block;
+    color: #777;
+    font-size: 0.875em;
+    font-weight: normal;
+    text-align: center;
+    text-transform: uppercase;
+    line-height: 1.5em;
+    font-family: 'Open Sans', sans-serif;
+}
+
+    #signupForm #signupbody fieldset label span {
+        display: inline-block;
+        padding: 0px;
+        font-size: 0.875em;
+        color: #9B59B;
+    }
+
+.remeber {
+    margin-top: 0.5em;
+}
+
+/* Forgot your password */
+#signupForm span {
+    display: block;
+    background: #fff;
+    padding: 0px 0px 0px 13px;
+}
+
+    #signupForm span a {
+        color: #FFF;
+        font-size: 0.875em;
+    }
+
+input:focus {
+    outline: none;
+}
+/*media*/
+@media only screen and (max-width:1000px) {
+
+    #loginButton span {
+        margin-left: 180px;
+    }
+}
+
+@media only screen and (max-width:768px) {
+
+    #loginButton span {
+        margin-left: 180px;
+    }
+}
+
+@media only screen and (max-width:468px) {
+
+    #loginButton span {
+        margin-left: 50px;
+    }
+}
+
+@media only screen and (max-width:320px) {
+
+    .sign-ligin-btns ul li a.signup span, .sign-ligin-btns ul li a.login span {
+        padding: 1.8em 1em 0.8em 1em;
+    }
+    /*****/
+    #loginBox:before {
+        right: 80px;
+    }
+
+    #signupBox:before {
+        right: 25px;
+    }
+
+    #loginForm, #signupForm {
+        width: 200px;
+        z-index: 0;
+    }
+
+    #loginBox {
+        top: 35px;
+        right: -60px;
+    }
+
+    #signupBox {
+        top: 35px;
+    }
+
+    #loginForm #body fieldset label {
+        font-size: 0.72em;
+    }
+
+    #loginForm input, #signupForm input[type="text"], #signupForm input[type="password"] {
+        padding: 3px 3px;
+    }
+
+    #loginForm #checkbox {
+        margin: 2px 9px 0 0;
+    }
+
+    #body label, #signupForm #signupbody fieldset label {
+        font-size: 0.8em;
+    }
+
+    #loginForm #login, #signupForm #signup {
+        padding: 5px 5px;
+        font-size: 0.8em;
+    }
+
+    fieldset#body, fieldset#signupbody {
+        padding: 12px;
+    }
+
+    #loginForm span a, #loginForm span a {
+        font-size: 0.8em;
+    }
+
+    #loginBox, #signupBox {
+        padding-bottom: 0.2em;
+    }
+
+        #loginBox:before, #signupBox:before {
+            top: -16px;
+            border-left: 15px solid rgba(0, 0, 0, 0);
+            border-right: 15px solid rgba(0, 0, 0, 0);
+            border-bottom: 15px solid #222;
+        }
+}
+/*contact*/
+
+/* The field labels */
+
+label {
+    display: block;
+    float: left;
+    clear: left;
+    text-align: right;
+    padding: .4em 0 0 0;
+    margin: .15em .5em 0 0;
+    font-weight: bold;
+}
+
+
+/* The fields */
+
+input {
+    display: block;
+    margin: 0;
+    padding: .4em;
+    font-family: "Georgia", serif;
+    font-size: 1em;
+    border: 1px solid #aaa;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    -moz-box-shadow: rgba(0,0,0,.2) 0 1px 4px inset;
+    -webkit-box-shadow: rgba(0,0,0,.2) 0 1px 4px inset;
+    box-shadow: rgba(0,0,0,.2) 0 1px 4px inset;
+    background: #fff;
+}
+
+    /* The Send and Cancel buttons */
+
+    input[type="submit"], input[type="button"] {
+        float: right;
+        margin: 2em 1em 0 1em;
+        width: 10em;
+        padding: .5em;
+        border: 1px solid #666;
+        -moz-border-radius: 10px;
+        -webkit-border-radius: 10px;
+        border-radius: 10px;
+        -moz-box-shadow: 0 0 .5em rgba(0, 0, 0, .8);
+        -webkit-box-shadow: 0 0 .5em rgba(0, 0, 0, .8);
+        box-shadow: 0 0 .5em rgba(0, 0, 0, .8);
+        color: #fff;
+        background: #00bfa5;
+        font-size: 1em;
+        line-height: 1em;
+        font-weight: bold;
+        opacity: .7;
+        -webkit-appearance: none;
+        -moz-transition: opacity .5s;
+        -webkit-transition: opacity .5s;
+        -o-transition: opacity .5s;
+        transition: opacity .5s;
+    }
+
+        input[type="submit"]:hover,
+        input[type="submit"]:active,
+        input[type="button"]:hover,
+        input[type="button"]:active {
+            cursor: pointer;
+            opacity: 1;
+        }
+
+.pop_up_box {
+    /*visibility:hidden;*/
+    margin-left: 15%;
+    position: fixed;
+    margin-top: -1%;
+    width: 70%;
+    height: 100%;
+    /*z-index:1111;*/
+}
+
+@media only screen and (max-width: 800px) {
+    .pop_up_box {
+        /*visibility: hidden;*/
+        margin-left: 1%  !important ;
+        position: fixed;
+        padding-top: -25% !important ;
+        width: 95% !important;
+        height: 100%;
+        /*z-index:1111;*/
+    }
+
+    #sign_up_form{
+        width: 100% !important;
+        padding-left: 0px !important;
+        vertical-align: middle;
+    }
+}
+
+@media only screen and (min-width: 801px) {
+    .pop_up_box {
+        /*visibility: hidden;*/
+        margin-left: 20%;
+        position: fixed;
+        margin-top: -3% !important;
+        width: 60%;
+        height: 100%;
+        /*z-index:1111;*/
+    }
+}
+
+
+.ui.modals {
+    z-index: 2000;
+}
+
+/*Mobile*/
+@media only screen and (max-width:800px){
+    #order_section{
+        display:block !important;
+        padding-left: 17% !important;
+        padding-right: -10% !important;
+        max-width:50% !important;
+        width:auto !important;
+    }
+}
+/*Tablet, computer*/
+@media only screen and (min-width:801px) and (max-width:1290px){
+    #order_section{
+        display:block !important;
+        padding-left: 17% !important;
+        /*padding-right:25% !important;*/
+        max-width:50% !important;
+        width: 60% !important;
+    }
+}
+#order_section{
+
+}
+
+/*Custom Stuff*/
+
+/* Mobile */
+
+@media only screen and (max-width: 767px) {
+    .mobile-hide{
+        display: none !important;
+    }
+}
+
+/* Tablet */
+
+@media only screen and (min-width: 768px) and (max-width: 991px) {
+    .tablet-hide{
+        display: none !important;
+    }
+}
+
+/* Small Monitor */
+
+@media only screen and (min-width: 992px) and (max-width: 1199px) {
+    .small-hide{
+        display: none !important;
+    }
+}
+
+
+/* Large Monitor */
+
+@media only screen and (min-width: 1200px) {
+    .large-hide{
+        display: none !important;
+    }
+}

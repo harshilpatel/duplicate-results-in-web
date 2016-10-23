@@ -1,0 +1,1 @@
+web: gunicorn qwikgear.wsgi --log-file -

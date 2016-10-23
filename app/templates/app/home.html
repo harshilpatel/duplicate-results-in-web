@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	{%load staticfiles%}
+	<link rel="stylesheet" type="text/css" href="{%static 'app/vendor/css/bootstrap.css'%}">
+	<link rel="stylesheet" type="text/css" href="{%static 'app/vendor/css/modal.css'%}">
+	<link rel="stylesheet" type="text/css" href="{%static 'app/vendor/css/semantic.min.css'%}">
+	<script type="text/javascript" src="{%static 'app/vendor/js/underscore.js'%}"></script>
+	<script type="text/javascript" src="{%static 'app/vendor/js/jquery.min.js'%}"></script>
+</head>
+<body>
+	<div class="row">
+		<div class="col-lg-8 col-lg-offset-2">
+			<div class="panel panel-default">
+				<div class="panel-heading"></div>
+				<div class="panel-body">
+					<div class="row">
+						<div class="col-lg-6">
+							<input id="stringValue" type="" name="" class="form-control">
+						</div>
+						<div class="col-lg-6">
+							<input id="stringold3ColorHash" type="" name="" class="form-control">
+							<input id="stringold2ColorHash" type="" name="" class="form-control">
+							<input id="stringold1ColorHash" type="" name="" class="form-control">
+							<input id="stringColorHash" type="" name="" class="form-control">
+							<div id="stringDest" style="height: 100px"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+	$("#stringValue").on("keyup", function(){
+		var value = $(this).val();
+		if( $(this).val().length == 0 )  return;
+		$.get('/getcolor/', {'string': $(this).val(), }, function(data, status){
+			$("#stringDest").css('background-color', "#" + data['value']);
+			$('#stringold3ColorHash').val($("#stringold2ColorHash").val());
+			$('#stringold2ColorHash').val($("#stringold1ColorHash").val());
+			$('#stringold1ColorHash').val($("#stringColorHash").val());
+			$("#stringColorHash").val( value + " : "  + data['value']);
+		})
+	})
+</script>
+</html>
