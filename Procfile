@@ -1,1 +1,1 @@
-web: gunicorn qwikgear.wsgi --log-file -
+web: gunicorn beproject.wsgi --log-file -
