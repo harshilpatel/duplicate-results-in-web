@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
+from parse import beginQuery
 import string
 import logging
 
@@ -53,3 +54,6 @@ def home(request):
 	return render(request, 'app/home.html', {
 		'title' : 'Be Project',
 		})
+
+def testQuery(request, query):
+	return JsonResponse(beginQuery(query), safe = False)

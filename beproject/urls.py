@@ -20,5 +20,6 @@ from app.views import *
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^getcolor/$', string_to_hex, name="getColor"),
+    url(r'^test-query/(?P<query>.*)$', testQuery, name="getColor"),
     url(r'^$', home, name='home'),
 ]
