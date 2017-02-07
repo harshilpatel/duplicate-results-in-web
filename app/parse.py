@@ -214,14 +214,14 @@ def beginQuery(query, quantity = 30):
 	data_to_be_written = []
 	for i in range(0, int(quantity), breakdown):
 		# print i
-		headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+		# headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
 
 		if i == 0:
 			url = 'https://www.google.com/search?q={0}&num={1}'.format(query, breakdown)
 		else:
 			url = 'https://www.google.com/search?q={0}&num={1}&start={2}'.format(query, breakdown, i)
 
-		r = requests.get(url, headers = headers)
+		# r = requests.get(url, headers = headers)
 		
 		# if 'Our systems have detected unusual traffic from your computer network' in r.text:
 			# print "Error"
