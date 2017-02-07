@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from parse import beginQuery
+from app.parse import beginQuery
 import string
 import logging
 
