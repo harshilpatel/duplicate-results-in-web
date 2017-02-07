@@ -15,6 +15,6 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "beproject.settings")
 
 application = get_wsgi_application()
 
-if os.environ.get('heroku'):
+if os.environ.get('heroku') or os.environ.get('RDS_DB_NAME'):
 	from dj_static import Cling
 	application = Cling(get_wsgi_application())
