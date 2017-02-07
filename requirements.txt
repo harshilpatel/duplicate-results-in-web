@@ -1,6 +1,5 @@
 dj-database-url==0.4.1
 appdirs==1.4.0
-#BeautifulSoup==3.2.1
 beautifulsoup4==4.3.2
 coloredlogs==5.2
 cssselect==0.9.1
