@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from pprint import pprint
 import sys
 import os
-import newspaper
+from newspaper import Article
 import time
 import json
 from selenium import webdriver
@@ -76,7 +76,7 @@ def parseResults(results):
 		if 'webcache' in i or (i.count('/') <= 3 and i[-1:] == '/'):
 			# print "CachedGoogle link"
 			continue
-		article = newspaper.Article(i)
+		article = Article(i)
 		article.download()
 		data['url'] = str('[' + i + ']')
 		# try:
