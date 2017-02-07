@@ -29,8 +29,6 @@ selenium==3.0.2
 six==1.7.3
 static3==0.7.0
 tldextract==1.5.1
-
-
 #Django==1.10.1
 #djangorestframework==3.4.7
 dj-database-url==0.4.1
