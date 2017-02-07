@@ -1,9 +1,9 @@
+dj-database-url==0.4.1
 appdirs==1.4.0
 #BeautifulSoup==3.2.1
 beautifulsoup4==4.3.2
 coloredlogs==5.2
 cssselect==0.9.1
-dj-database-url==0.4.1
 dj-static==0.0.6
 Django==1.10.1
 feedfinder2==0.0.1
@@ -19,7 +19,6 @@ numpy==1.12.0
 olefile==0.44
 packaging==16.8
 Pillow==4.0.0
-#pkg-resources==0.0.0
 pyparsing==2.1.10
 python-dateutil==2.4.0
 PyYAML==3.11
