@@ -22,8 +22,7 @@ if 'RDS_DB_NAME' in os.environ:
 	from pyvirtualdisplay import Display
 	display = Display(visible=0, size=(800, 600))
 	display.start()
-	
-driver = webdriver.Chrome(os.getcwd() + '/chromedriver')
+
 
 def fixup(m):
 	text = m.group(0)
@@ -188,6 +187,7 @@ def beginQuery(query, quantity = 30, force = False):
 		# driver = webdriver.Chrome(os.getcwd() + '/chromedriver')
 		# driver.set_window_size(1,1)
 
+		driver = webdriver.Chrome(os.getcwd() + '/chromedriver')
 		driver.get(url)
 		all_results = []
 
@@ -204,7 +204,7 @@ def beginQuery(query, quantity = 30, force = False):
 		for result in driver.find_elements_by_css_selector('.rc'):
 			all_results.append(result.find_element_by_css_selector('a').get_attribute('href'))
 
-		# driver.close()
+		driver.close()
 
 		for i in parseResults(all_results, force):
 			data_to_be_written.append(i)
