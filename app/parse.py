@@ -18,6 +18,13 @@ from django.db.models import Q
 import re, string, htmlentitydefs
 regex = re.compile('[%s]' % re.escape(string.punctuation))
 
+if 'RDS_DB_NAME' in os.environ:
+	from pyvirtualdisplay import Display
+	display = Display(visible=0, size=(800, 600))
+	display.start()
+	
+driver = webdriver.Chrome(os.getcwd() + '/chromedriver')
+
 def fixup(m):
 	text = m.group(0)
 	if text[:2] == "&#":
@@ -143,7 +150,7 @@ def parseResults(results, force = False):
 		# 	print e
 		# 	data['text'] = str('FAILS')
 		returnData.append(data)
-		print "*"*10
+		# print "*"*10
 	return returnData
 
 # def getResults(html):
@@ -178,14 +185,26 @@ def beginQuery(query, quantity = 30, force = False):
 		else:
 			url = 'https://www.google.com/search?q={0}&num={1}&start={2}'.format(query, breakdown, i)
 
-		driver = webdriver.Chrome(os.getcwd() + '/chromedriver')
+		# driver = webdriver.Chrome(os.getcwd() + '/chromedriver')
 		# driver.set_window_size(1,1)
+
 		driver.get(url)
 		all_results = []
+
+		# soup = BeautifulSoup(requests.get(url).text, 'lxml')
+
+		# for link in soup.find_all('a'):
+		# 	href = link.get('href')
+		# 	if '/url?q=' in href and 'webcache' not in href:
+		# 		href = href.replace('/url?q=', '')
+		# 		href = href[:href.index('&sa')]
+		# 		print href
+		# 		all_results.append(href)
+
 		for result in driver.find_elements_by_css_selector('.rc'):
 			all_results.append(result.find_element_by_css_selector('a').get_attribute('href'))
 
-		driver.close()
+		# driver.close()
 
 		for i in parseResults(all_results, force):
 			data_to_be_written.append(i)
