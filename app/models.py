@@ -16,9 +16,10 @@ structural_tags = (
 
 class link(models.Model):
 	url = models.TextField(blank = True)
+	title = models.TextField(blank = True)
 	text = models.TextField(blank = True)
 	keywords = models.TextField(blank = True)
-	structuralCandidates = models.ManyToManyField('structuralCandidates')
+	structuralCandidates = models.ManyToManyField('structuralCandidates', related_name = "struct")
 	# wordCandidates = models.ManyToManyField('wordCandidate')
 	# contextualCandidates = models.ManyToManyField('contextualCandidates')
 	# structuralCandidates = models.ManyToManyField('structuralCandidates')
@@ -30,10 +31,10 @@ class wordCandidate(models.Model):
 class contextualCandidates(models.Model):
 	# order = models.IntegerField(default = 0)
 	feature = models.CharField(max_length = 20, choices=features)
-	wordCandidates = models.ManyToManyField('wordCandidate')
+	wordCandidates = models.ManyToManyField('wordCandidate', related_name = "contexts")
 
 class structuralCandidates(models.Model):
 	tag = models.CharField(max_length = 2, choices = structural_tags, default = "2")
 	# order = models.IntegerField(default = 0)
 
-	contextualCandidates = models.ManyToManyField('contextualCandidates')
+	contextualCandidates = models.ManyToManyField('contextualCandidates', related_name = "struct")

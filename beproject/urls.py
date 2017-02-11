@@ -15,11 +15,11 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
-from app.views import string_to_hex, testQuery, home
+from app.views import string_to_hex, search, home
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^getcolor/$', string_to_hex, name="getColor"),
-    url(r'^test-query/(?P<query>.*)$', testQuery, name="getColor"),
-    url(r'^$', home, name='home'),
+    url(r'^tool/search', search, name="results"),
+    url(r'^tool', home, name='home'),
 ]

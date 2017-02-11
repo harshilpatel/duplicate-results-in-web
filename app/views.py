@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from app.parse import beginQuery
 import string
 import logging
+from rest_framework.response import Response
 
 def int_to_string(a):
 	a = str(a).strip()
@@ -55,5 +56,22 @@ def home(request):
 		'title' : 'Be Project',
 		})
 
-def testQuery(request, query):
-	return JsonResponse(beginQuery(query), safe = False)
+def search(request):
+	query = request.GET.get('query')
+	force = request.GET.get('force') # Build Resources Again
+	quantity = request.GET.get('quantity') # defaults to 5
+
+	if force == "false": force = False
+	elif force == "true": force = True
+	else: force = False
+
+	if quantity: quantity = int(quantity)
+	else: quantity = 5
+
+	if "_" in query.encode('utf-8'):
+		query = query.replace("_"," ")
+	
+	return JsonResponse(beginQuery(query, quantity, force), safe = False)
+
+def home(request):
+	return render(request, 'app/index.html', {})
