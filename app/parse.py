@@ -187,24 +187,24 @@ def beginQuery(query, quantity = 30, force = False):
 		# driver = webdriver.Chrome(os.getcwd() + '/chromedriver')
 		# driver.set_window_size(1,1)
 
-		driver = webdriver.Chrome(os.getcwd() + '/chromedriver')
-		driver.get(url)
+		# driver = webdriver.Chrome(os.getcwd() + '/chromedriver')
+		# driver.get(url)
 		all_results = []
 
-		# soup = BeautifulSoup(requests.get(url).text, 'lxml')
+		soup = BeautifulSoup(requests.get(url).text, 'lxml')
 
-		# for link in soup.find_all('a'):
-		# 	href = link.get('href')
-		# 	if '/url?q=' in href and 'webcache' not in href:
-		# 		href = href.replace('/url?q=', '')
-		# 		href = href[:href.index('&sa')]
-		# 		print href
-		# 		all_results.append(href)
+		for link in soup.find_all('a'):
+			href = link.get('href')
+			if '/url?q=' in href and 'webcache' not in href:
+				href = href.replace('/url?q=', '')
+				href = href[:href.index('&sa')]
+				print href
+				all_results.append(href)
 
-		for result in driver.find_elements_by_css_selector('.rc'):
-			all_results.append(result.find_element_by_css_selector('a').get_attribute('href'))
+		# for result in driver.find_elements_by_css_selector('.rc'):
+			# all_results.append(result.find_element_by_css_selector('a').get_attribute('href'))
 
-		driver.close()
+		# driver.close()
 
 		for i in parseResults(all_results, force):
 			data_to_be_written.append(i)
