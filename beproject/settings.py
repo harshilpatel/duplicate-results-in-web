@@ -131,7 +131,9 @@ if os.environ.get('heroku'):
     DATABASES = {}
     DATABASES['default'] = dj_database_url.config()
     import nltk
-    nltk.download('all')
+    nltk.download('stopwords')
+    nltk.download('maxent_treebank_pos_tagger')
+
 
 if 'RDS_DB_NAME' in os.environ:
     # STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
