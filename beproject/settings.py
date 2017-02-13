@@ -126,13 +126,13 @@ STATIC_ROOT = os.path.abspath(os.path.join(
     'static'
 ))
 
-# if os.environ.get('heroku'):
-#     import dj_database_url
-#     DATABASES = {}
-#     DATABASES['default'] = dj_database_url.config()
-#     import nltk
-#     nltk.download('stopwords')
-#     nltk.download('maxent_treebank_pos_tagger')
+if os.environ.get('heroku'):
+    import dj_database_url
+    DATABASES = {}
+    DATABASES['default'] = dj_database_url.config()
+    import nltk
+    nltk.download('stopwords')
+    nltk.download('maxent_treebank_pos_tagger')
 
 
 if 'RDS_DB_NAME' in os.environ:
