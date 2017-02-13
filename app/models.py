@@ -54,7 +54,7 @@ class webSearch(models.Model):
 
 class WebResource(models.Model):
 	resourceType = models.CharField(max_length = 100, default = "0", choices = WebResourceChoices)
-	url = models.CharField(max_length = 100, blank = True)
+	url = models.TextField(blank = True)
 	text = models.TextField(blank = True)
 	keywords = models.TextField(blank = True)
 	title = models.CharField(max_length = 500, blank = True)
