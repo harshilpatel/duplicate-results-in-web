@@ -25,10 +25,8 @@ if os.environ.get('heroku'):
 	url = "http://www.news.google.co.in"
 	r = requests.get(url)
 	soup = BeautifulSoup(requests.get(url).text, 'lxml')
-	print soup
 	for link in soup.find_all('a'):
-		# print link
-		for item in link.text.encode('utf-8').split(" "):
+		for item in link.text.encode('utf-8', 'replace').split(" "):
 			item = item.lower()
 			item = item.replace("'","").replace('"','')
 			if item not in stop and item != "" and len(item) > 3:
@@ -41,7 +39,7 @@ else:
 	sample = []
 
 	for i in driver.find_elements_by_css_selector('a'):
-		for item in i.text.encode('utf-8').split(" "):
+		for item in i.text.encode('utf-8', 'replace').split(" "):
 			item = item.lower()
 			item = item.replace("'","").replace('"','')
 			if item not in stop and item != "" and len(item) > 3:
@@ -54,5 +52,5 @@ print(len(sample))
 
 pprint(sample)
 
-# for i in sample:
-# 	get_results(i, 50)
+for i in sample:
+	get_results(i, 50)

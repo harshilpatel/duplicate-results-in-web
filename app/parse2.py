@@ -29,6 +29,7 @@ def getGoogleResults(query, quantity, news = True):
 			url = 'https://www.google.com/search?q={0}&num={1}{2}'.format(query, breakdown, newsParams)
 		else:
 			url = 'https://www.google.com/search?q={0}&num={1}&start={2}{3}'.format(query, breakdown, i, newsParams)
+			
 		if os.environ.get('heroku'):
 			soup = BeautifulSoup(requests.get(url).text, 'lxml')
 			for link in soup.find_all('a'):
@@ -48,14 +49,14 @@ def getGoogleResults(query, quantity, news = True):
 						try:
 							url = result.find_element_by_css_selector('a.l').get_attribute('href')
 							if url:
-								print url
+								# print url
 								all_results.add(url)
 						except: pass
 			else:
 				for result in driver.find_elements_by_css_selector('.rc'):
 					url = result.find_element_by_css_selector('a').get_attribute('href')
 					if "youtube.co" not in url:
-						print url
+						# print url
 						all_results.add(url)
 			driver.close()
 
@@ -137,8 +138,8 @@ def get_results(query, quantity, force = False, news = True):
 			for i in keywords:
 				knowledgeKeywords.add(i)
 		except Exception as e:
-			print "ERR - "
-			# print e
+			# print "ERR - "
+			print e
 
 
 
@@ -159,6 +160,6 @@ def get_results(query, quantity, force = False, news = True):
 		})
 		
 
-	print "Time Taken to get results [Cached/new] {0} minutes".format((datetime.now() - start).seconds/60)
+	# print "Time Taken to get results [Cached/new] {0} minutes".format((datetime.now() - start).seconds/60)
 	# driver.close()
 	return data_to_be_written
