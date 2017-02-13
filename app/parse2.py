@@ -82,7 +82,7 @@ def get_results(query, quantity, force = False, news = True):
 	all_results = getGoogleResults(query, quantity, news = True)
 
 	for i in all_results:
-		# print "Analysing {0} for keywords".format(i[:20])
+		print "Analysing {0} for keywords".format(i[:20])
 		wr, created = WebResource.objects.get_or_create(url = i)
 		data = {'url' : i}
 		if created:
