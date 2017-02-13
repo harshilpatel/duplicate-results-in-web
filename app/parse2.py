@@ -82,42 +82,45 @@ def get_results(query, quantity, force = False, news = True):
 	all_results = getGoogleResults(query, quantity, news = True)
 
 	for i in all_results:
-		print "Analysing {0} for keywords".format(i[:20])
-		wr, created = WebResource.objects.get_or_create(url = i)
-		data = {'url' : i}
-		if created:
-			a = newspaper.Article(i)
-			a.download()
-			a.parse()
-			try:
-				a.nlp()
-				keywords = a.keywords
-			except:
-				keywords = ""
-				pass
-			if keywords:
-				keywords = ",".join([i.encode('utf-8') for i in keywords if i and i in a.text])
-			# else:
-				# keywords = ""
-			data.update({
-				'keywords' : keywords,
-				'text' : a.text.encode('utf-8'),
-				'title' : a.title,
-				})
+		try:
+			print "Analysing {0} for keywords".format(i[:20])
+			wr, created = WebResource.objects.get_or_create(url = i)
+			data = {'url' : i}
+			if created:
+				a = newspaper.Article(i)
+				a.download()
+				a.parse()
+				try:
+					a.nlp()
+					keywords = a.keywords
+				except:
+					keywords = ""
+					pass
+				if keywords:
+					keywords = ",".join([i.encode('utf-8') for i in keywords if i and i in a.text])
+				# else:
+					# keywords = ""
+				data.update({
+					'keywords' : keywords,
+					'text' : a.text.encode('utf-8'),
+					'title' : a.title,
+					})
+				data_to_be_written.append(data)
+				wr.keywords = data.get('keywords')
+				wr.text = data.get('text')
+				wr.title = data.get('title')
+				wr.save()
+			else:
+				data.update({
+					'keywords' : wr.keywords,
+					'text' : wr.text,
+					'title' : wr.title,
+					})
+			if wr not in results.results.all():
+					results.results.add(wr)
 			data_to_be_written.append(data)
-			wr.keywords = data.get('keywords')
-			wr.text = data.get('text')
-			wr.title = data.get('title')
-			wr.save()
-		else:
-			data.update({
-				'keywords' : wr.keywords,
-				'text' : wr.text,
-				'title' : wr.title,
-				})
-		if wr not in results.results.all():
-				results.results.add(wr)
-		data_to_be_written.append(data)
+		except:
+			pass
 
 	# knowledge = []
 	knowledgeKeywords = set([])
