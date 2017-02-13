@@ -1,9 +1,11 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from app.parse import beginQuery
+from app.parse2 import get_results
 import string
 import logging
 from rest_framework.response import Response
+from app.models import *
 
 def int_to_string(a):
 	a = str(a).strip()
@@ -71,7 +73,11 @@ def search(request):
 	if "_" in query.encode('utf-8'):
 		query = query.replace("_"," ")
 	
-	return JsonResponse(beginQuery(query, quantity, force), safe = False)
+	return JsonResponse(get_results(query, quantity, force), safe = False)
 
 def home(request):
 	return render(request, 'app/index.html', {})
+
+def history(request):
+	data = [i.queryText for i in webSearch.objects.all()]
+	return JsonResponse(data, safe = False)

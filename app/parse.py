@@ -18,6 +18,8 @@ from django.db.models import Q
 import re, string, htmlentitydefs
 regex = re.compile('[%s]' % re.escape(string.punctuation))
 
+
+
 if 'RDS_DB_NAME' in os.environ:
 	from pyvirtualdisplay import Display
 	display = Display(visible=0, size=(800, 600))
@@ -92,39 +94,47 @@ def parseResults(results, force = False):
 				tokens = nltk.word_tokenize(sentence)
 				new_tokens = []
 
-				for token in tokens: 
-					new_token = regex.sub(u'', token)
-					if not new_token == u'':
-						new_tokens.append(new_token)
+				# for token in tokens: 
+				# 	new_token = regex.sub(u'', token)
+				# 	if not new_token == u'':
+				# 		new_tokens.append(new_token)
 					
-				tagged = nltk.pos_tag(new_tokens)
+				# tagged = nltk.pos_tag(new_tokens)
 
 				context = []
-				for group in tagged:
-					word, feature = group
-					word = stemmer.stem(word)
-					word = word.strip()
-					if word and word not in stop:
-						wordC, created  = wordCandidate.objects.get_or_create(text = word, feature = feature)
-						# if not created: print "Found exisiting word - {0}".format(word)
-						context.append(wordC)
+				# for group in tagged:
+				# 	word, feature = group
+				# 	word = stemmer.stem(word)
+				# 	word = word.strip()
+				# 	if word and word not in stop:
+				# 		wordC, created  = wordCandidate.objects.get_or_create(text = word, feature = feature)
+				# 		# if not created: print "Found exisiting word - {0}".format(word)
+				# 		context.append(wordC)
 
-				q_objects = []
-				for c in context:
-					q_objects.append(Q(wordCandidates = c))
+				# q_objects = []
 
-				if len(q_objects) > 0:
-					contextualCFilter = contextualCandidates.objects.filter(reduce(operator.and_, q_objects)) # look for matching sentence with same context
-					for cc in contextualCFilter:
-						if context == list(cc.wordCandidates.all()):
-							# print "Found existing Sentence - {0}".format(sentence)
-							contextualC = cc
-							# print "Match found"
-							break
-					else:
-						contextualC = contextualCandidates.objects.create()
-						contextualC.wordCandidates.set(context)
-					structures.append(contextualC)
+				# for c in context:
+				# 	q_objects.append(Q(wordCandidates = c))
+
+				words = [i for i in tokens if i not in stop]
+
+				words.sort()
+
+				cc, created = contextualCandidates.objects.get_or_create(text = words)
+				structures.append(cc)
+
+				# if len(q_objects) > 0:
+				# 	contextualCFilter = contextualCandidates.objects.filter(reduce(operator.and_, q_objects)) # look for matching sentence with same context
+				# 	for cc in contextualCFilter:
+				# 		if context == list(cc.wordCandidates.all()):
+				# 			# print "Found existing Sentence - {0}".format(sentence)
+				# 			contextualC = cc
+				# 			# print "Match found"
+				# 			break
+				# 	else:
+				# 		contextualC = contextualCandidates.objects.create()
+				# 		contextualC.wordCandidates.set(context)
+					# structures.append(contextualC)
 
 			q_objects = []
 			for s in structures:
@@ -134,7 +144,7 @@ def parseResults(results, force = False):
 				structuralCFilter = structuralCandidates.objects.filter(reduce(operator.and_, q_objects)) # look for existing structure
 
 				for sc in structuralCFilter:
-					if structures == sc.contextualCandidates.all():
+					if structures == list(sc.contextualCandidates.all()):
 						structuralC = sc
 						# print "Found existing Structure"
 						break
@@ -212,3 +222,43 @@ def beginQuery(query, quantity = 30, force = False):
 
 	print "Time Taken to get results [Cached/new] {0} minutes".format((datetime.now() - start).seconds/60)
 	return data_to_be_written
+
+
+# def compare(url1, url2):
+# 	docA = Article(url1)
+# 	docB = Article(url2)
+
+# 	stop = set(stopwords.words('english'))
+# 	stemmer = PorterStemmer()
+
+# 	learning = []
+
+# 	for i in [docA, docB]:
+# 		i.download()
+# 		i.parse()
+# 		# i = i.text.encode('utf-8')
+
+# 		data = {
+# 			'url' : i.url,
+# 			'text' : i.text.encode('utf-8')
+# 		}
+
+# 		text = data.get('text')
+
+
+# 		para = text.split("\n")
+
+# 		structures = []
+# 		for p in para:
+# 			sentences = p.split('.')
+# 			for s in sentences:
+# 				s = set(nltk.word_tokenize(s))
+# 				for j in s:
+# 					if j in stop:
+# 						s.remove(j)
+# 					word = stemmer.stem(s)
+# 				structures.append(s)
+
+
+# 	print type(docA)
+# 	print type(docB)

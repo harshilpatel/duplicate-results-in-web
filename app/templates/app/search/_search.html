@@ -1,13 +1,18 @@
 {%verbatim%}
 <script id="search.htm" type="text/ng-template" ng-controller="search">
     <div class="container">
-        <div class="col-lg-4">
-            <input type="text" class="form-control col-lg-4" placeholder="Enter your query" ng-model="query" autofocus />
+        <div class="col-lg-3">
+            <input type="text" name="query" class="form-control col-lg-4" placeholder="Enter your query" ng-model="query" autofocus />
         </div>
-        <div class="col-lg-2">
-            <input type="number" class="form-control" ng-model="queryQuantity">
+        <div class="col-lg-3">
+            <select class="form-control" ng-model="query">
+                <option ng-repeat="h in history">{{h}}</option>
+            </select>
         </div>
-        <div class="col-lg-2">
+        <div class="col-lg-1">
+            <input type="number" class="form-control" value="10" ng-model="queryQuantity">
+        </div>
+        <div class="col-lg-1">
             <label class="control-label"><input type="checkbox" ng-model="queryForce" placeholder="Force"/>&nbsp;&nbsp;&nbsp;Force</label>
         </div>
         <div class="col-lg-2">
@@ -23,11 +28,28 @@
         <div class="col-lg-12">
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <div class="col-lg-12" ng-repeat="r in results">
+                     <div class="col-lg-12" ng-if="results.length > 0">
+                        <span>{{results.length}} results</span>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="panel panel-default">
+                            <!-- <div class="panel-body"> -->
+                                <div class="panel-body" ng-repeat="r in results"  ng-if="results.length > 0 && r.type == 'meta'">
+                                    <button class="btn btn-sm" ng-repeat="k in r.keywords" ng-if="query.indexOf(k) == -1" class="mark" ng-click="filterByKeyword($event, k)">{{k}}</button> &nbsp; &nbsp;
+                                </div>
+                            <!-- </div> -->
+                        </div>
+                    </div>
+                    <div class="col-lg-12" ng-repeat="r in results" ng-hide="r.hide" ng-if="r.text.length > 0">
                         <div class="panel panel-default">
                             <div class="panel-body">
-                                <a href="{{r.url}}">{{r.url}}</a>
-                                <span class="pull-right">{{r.title}}</span>
+                                <a href="{{r.url}}" target="_blank"><span class="">{{r.title}}</span></a> 
+                                <button class="btn btn-default btn-xs" data-target="#magicModal" data-toggle="modal" ng-click="focusResult(r)">magic</button>
+                                 <br>
+                                <span class="mark">{{r.keywords.split(",").join(" - ")}}</span> <br>
+                                <!-- <p>
+                                    {{r.text}}
+                                </p> -->
                             </div>
                         </div>
                     </div>
@@ -36,6 +58,26 @@
         </div>
 
     </div>
+
+    <div class="modal fade" tabindex="-1" role="dialog" id="magicModal">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">{{focusedResult.title}}</h4>
+          </div>
+          <div class="modal-body">
+            <p ng-repeat="t in focusedResult.plaintext">
+                {{t}}
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 
 </script>
 {%endverbatim%}

@@ -31,6 +31,7 @@ class wordCandidate(models.Model):
 class contextualCandidates(models.Model):
 	# order = models.IntegerField(default = 0)
 	feature = models.CharField(max_length = 20, choices=features)
+	text = models.TextField(blank = True)
 	wordCandidates = models.ManyToManyField('wordCandidate', related_name = "contexts")
 
 class structuralCandidates(models.Model):
@@ -38,3 +39,40 @@ class structuralCandidates(models.Model):
 	# order = models.IntegerField(default = 0)
 
 	contextualCandidates = models.ManyToManyField('contextualCandidates', related_name = "struct")
+
+
+######################new models################################33
+
+
+WebResourceChoices = (
+	('0','url'),
+	('1','document/attachment'))
+
+class webSearch(models.Model):
+	queryText = models.CharField(max_length = 100)
+	results = models.ManyToManyField('WebResource')
+
+class WebResource(models.Model):
+	resourceType = models.CharField(max_length = 100, default = "0", choices = WebResourceChoices)
+	url = models.CharField(max_length = 100, blank = True)
+	text = models.TextField(blank = True)
+	keywords = models.TextField(blank = True)
+	title = models.CharField(max_length = 500, blank = True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
