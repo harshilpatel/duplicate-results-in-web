@@ -6,7 +6,11 @@
 ~~~
 virtualenv env --python=python  
 . env/bin/activate  
+sudo apt-get install python-dev
+sudo apt-get install libxml2-dev libxslt-dev libjpeg-dev zlib1g-dev libpng12-dev
 pip install -r requirements.txt  
+sudo pip uninstall Pillow
+sudo pip install Pillow
 python manage.py migrate  
 ~~~
 # Run project
