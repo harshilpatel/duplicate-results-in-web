@@ -58,12 +58,13 @@ class WebResource(models.Model):
 	text = models.TextField(blank = True)
 	keywords = models.TextField(blank = True)
 	title = models.CharField(max_length = 500, blank = True)
+	urls = models.TextField(blank = True)
 
 
 
 
 
-
+	
 
 
 

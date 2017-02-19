@@ -60,16 +60,13 @@ app.controller('search', function($scope, QUERY, history){
                     var index = result.text.indexOf(key);
                     if(index == -1){
                         result.hide = true;
+                        // break;
                     }
 
                 })
-                // var item = result.text;
-                // console.log(item.indexOf(1));
             }
         })
     }
-
-    // $("#submitQuery").click();
 })
 
 app.controller('compare', function($scope){

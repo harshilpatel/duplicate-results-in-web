@@ -1,4 +1,4 @@
-import os, requests, sys 
+import os, requests, sys, string
 from bs4 import BeautifulSoup
 import newspaper
 import nltk
@@ -7,12 +7,17 @@ from nltk.stem.porter import *
 from datetime import datetime
 from app.models import *
 from selenium import webdriver
+from pprint import pprint
 
 stop = set(stopwords.words('english'))
 stemmer = PorterStemmer()
+punctuation = string.punctuation
+from pattern.en import parse
+from pattern.vector import words, count, PORTER
+from pattern.web import plaintext, find_urls, strip_between
 
 
-def getGoogleResults(query, quantity, news = True):
+def getGoogleResults(query, quantity, news = False):
 	all_results = []
 	query = query.replace('_','%20')
 	breakdown = 50
@@ -49,18 +54,18 @@ def getGoogleResults(query, quantity, news = True):
 						try:
 							url = result.find_element_by_css_selector('a.l').get_attribute('href')
 							if url:
-								# print url
 								all_results.add(url)
 						except: pass
 			else:
 				for result in driver.find_elements_by_css_selector('.rc'):
 					url = result.find_element_by_css_selector('a').get_attribute('href')
 					if "youtube.co" not in url:
-						# print url
-						all_results.add(url)
+						if url in all_results: print "Duplicate Results"
+						all_results.append(url)
 			driver.close()
 
-	all_results = list(set(all_results))
+	# all_results = list(set(all_results))
+	# print len(all_results)
 
 	return all_results
 
@@ -79,31 +84,38 @@ def get_results(query, quantity, force = False, news = True):
 
 	data_to_be_written = []
 	results, created =  webSearch.objects.get_or_create(queryText = query.strip())
-	all_results = getGoogleResults(query, quantity, news = True)
+	all_results = getGoogleResults(query, quantity)
+
+	if len(all_results) == 0:
+  		all_results = [r.url for r in results.results.all() ]
 
 	for i in all_results:
 		try:
-			print "Analysing {0} for keywords".format(i[:20])
+			print "Analysing {0}".format(i)
 			wr, created = WebResource.objects.get_or_create(url = i)
 			data = {'url' : i}
-			if created:
+			if created or force:
 				a = newspaper.Article(i)
 				a.download()
 				a.parse()
 				try:
 					a.nlp()
-					keywords = a.keywords
 				except:
-					keywords = ""
 					pass
-				if keywords:
-					keywords = ",".join([i.encode('utf-8') for i in keywords if i and i in a.text])
-				# else:
-					# keywords = ""
+
+				text = a.text
+
+				# text = plaintext(a.html)
+				# w = words(text)
+				c = count(words = words(text),top = 5,stemmer = PORTER,exclude = [],stopwords = False,language = 'en') # need the count ?
+				w = words(a.text,top = 5,stemmer = PORTER,exclude = [],stopwords = False,language = 'en')
+				
+				keywords = ",".join(w)
 				data.update({
 					'keywords' : keywords,
-					'text' : a.text.encode('utf-8'),
+					'text' : text.encode('utf-8'),
 					'title' : a.title,
+					'urls' : ",".join(find_urls(strip_between("<body*>","</body", text)))
 					})
 				data_to_be_written.append(data)
 				wr.keywords = data.get('keywords')
@@ -115,51 +127,54 @@ def get_results(query, quantity, force = False, news = True):
 					'keywords' : wr.keywords,
 					'text' : wr.text,
 					'title' : wr.title,
+					'urls' : wr.urls,
 					})
 			if wr not in results.results.all():
 					results.results.add(wr)
 			data_to_be_written.append(data)
-		except:
-			pass
+		except Exception as e:
+			print e
 
 	# knowledge = []
-	knowledgeKeywords = set([])
+	knowledgeKeywords = []
 
 	for i in data_to_be_written:
 		i['plaintext'] = i.get('text').split('\n') # sentence
 		while "" in i['plaintext']:
 			i['plaintext'].remove('')
+		
+		knowledgeKeywords.extend(i.get('keywords').split(','))
 
 		# structures = []
 		# for j in i.get('text'):
 			# structures.append(j.split())
 
 		# i['text'] = structures
-		try:
+		# try:
 			# import pdb; pdb.set_trace()
-			keywords = i.get('keywords').split(',')
-			for i in keywords:
-				knowledgeKeywords.add(i)
-		except Exception as e:
+			# keywords = i.get('keywords').split(',')
+			# for i in keywords:
+				# knowledgeKeywords.add(i)
+		# except Exception as e:
 			# print "ERR - "
-			print e
+			# print e
 
 
-
-	knowledgeKeywords = list(knowledgeKeywords)
-	knowledgeKeywords.sort()
-
-	for j in range(len(knowledgeKeywords)):
-		if j >= len(knowledgeKeywords): continue
-		item = knowledgeKeywords[j]
-		if item in stop or len(item) <= 1:
-			knowledgeKeywords.remove(item)
-		
 
 	knowledgeKeywords = list(set(knowledgeKeywords))
+	knowledgeKeywords.sort()
+
+	# for j in range(len(knowledgeKeywords)):
+	# 	if j >= len(knowledgeKeywords): continue
+	# 	item = knowledgeKeywords[j]
+	# 	if item in stop or len(item) <= 1:
+	# 		knowledgeKeywords.remove(item)
+		
+
+	# knowledgeKeywords = list(set(knowledgeKeywords))
 	data_to_be_written.append({
 		'type' : 'meta',
-		'keywords' : list(knowledgeKeywords),
+		'keywords' : knowledgeKeywords,
 		})
 		
 

@@ -46,3 +46,4 @@ selenium==3.0.2
 #wcwidth==0.1.7
 #websocket-client==0.40.0
 psycopg2
+pattern

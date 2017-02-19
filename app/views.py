@@ -6,6 +6,8 @@ import string
 import logging
 from rest_framework.response import Response
 from app.models import *
+from app.analyse import *
+
 
 def int_to_string(a):
 	a = str(a).strip()
@@ -81,3 +83,10 @@ def home(request):
 def history(request):
 	data = [i.queryText for i in webSearch.objects.all()]
 	return JsonResponse(data, safe = False)
+
+
+def analysis(request):
+	query =  request.GET.get('query')
+	sourceURL = request.GET.get('sourceURL')
+	return analyseSource(query, sourceURL)
+

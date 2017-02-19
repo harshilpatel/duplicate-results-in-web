@@ -22,6 +22,7 @@ urlpatterns = [
     url(r'^getcolor/$', string_to_hex, name="getColor"),
     url(r'^tool/search', search, name="results"),
     url(r'^tool', home, name='home'),
-    url(r'^history', history, name='home'),
+    url(r'^history', history, name='history'),
+    url(r'^analysis', analysis, name="analyse"),
     url(r'^', home, name='home'),
 ]
