@@ -1,24 +1,26 @@
-{Linux}
+## Linux
 
-pip install virtualenv
+`pip install virtualenv`
 
-{Go to project folder and run:}
-virtualenv env --python=python
-. env/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-
+## Go to project folder and run:  
+~~~
+virtualenv env --python=python  
+. env/bin/activate  
+pip install -r requirements.txt  
+python manage.py migrate  
+~~~
 # Run project
+~~~
 python manage.py runserver
+~~~
+#### Get results without running the project [Hook while algo is being improved] ####
+#### *feed.py* contains an array of search queries, you want to fill up db with. EDIT it, if required. ####
+`python feed.py`
 
-# Get results without running the project [Hook while algo is being improved]
-# feed.py contains an array of search queries, you want to fill up db with. EDIT it, if required.
-python feed.py
-
-# Run algo [is running outside the project]
-python algo.py 0.5
-python algo.py 0.1
-python algo.py 1.0
+## Run algo [is running outside the project]  
+`python algo.py 0.5`  
+`python algo.py 0.1`  
+`python algo.py 1.0`  
 
 Float value is results to show when similarity is above this value else default is 0.1 when no float value entered.
 
