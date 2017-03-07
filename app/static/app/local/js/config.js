@@ -9,7 +9,7 @@ app.factory('history', function($resource){
 })
 
 app.controller('search', function($scope, QUERY, history){
-    $scope.query = "hydrogen bomb";
+    $scope.query = "";
     $scope.queryQuantity = 10;
     $scope.queryForce = false;
     $scope.results = [];
@@ -30,6 +30,7 @@ app.controller('search', function($scope, QUERY, history){
                                                 $("#submitQuery").removeClass('btn-warning');
                                                 $("#submitQuery").addClass('btn-success');
                                             });
+            console.clear();
         } else{
             $("#submitQuery").addClass('btn-danger');
         }
@@ -48,7 +49,7 @@ app.controller('search', function($scope, QUERY, history){
         } else{
             $scope.filterKeywords.splice($scope.filterKeywords.indexOf(text), 1);
         }
-        // console.log($scope.filterKeywords);
+        console.log($scope.filterKeywords);
 
         $($event.target).toggleClass('btn-success');
 

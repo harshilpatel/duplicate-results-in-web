@@ -87,7 +87,7 @@ def get_results(query, quantity, force = False, news = True):
 	all_results = getGoogleResults(query, quantity)
 
 	if len(all_results) == 0:
-  		all_results = [r.url for r in results.results.all() ]
+  		all_results = [r.url for r in results.results.all()[:quantity] ]
 
 	for i in all_results:
 		try:
@@ -108,7 +108,7 @@ def get_results(query, quantity, force = False, news = True):
 				# text = plaintext(a.html)
 				# w = words(text)
 				c = count(words = words(text),top = 5,stemmer = PORTER,exclude = [],stopwords = False,language = 'en') # need the count ?
-				w = words(a.text,top = 5,stemmer = PORTER,exclude = [],stopwords = False,language = 'en')
+				w = words(a.text,top = 5,stemmer = None,exclude = [],stopwords = False,language = 'en')
 				
 				keywords = ",".join(w)
 				data.update({
@@ -161,6 +161,9 @@ def get_results(query, quantity, force = False, news = True):
 
 
 
+	# knowledgeKeywords = list(set(knowledgeKeywords))
+	knowledgeKeywords = words(" ".join(knowledgeKeywords),top = 20,stemmer = None,exclude = [],stopwords = False,language = 'en')
+	# print knowledgeKeywords
 	knowledgeKeywords = list(set(knowledgeKeywords))
 	knowledgeKeywords.sort()
 

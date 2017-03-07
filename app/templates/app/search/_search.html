@@ -44,7 +44,7 @@
                         <div class="panel panel-default">
                             <div class="panel-body">
                                 <span>{{index}}</span> <a href="{{r.url}}" target="_blank"><span class="">{{r.title}}</span></a> 
-                                <button class="btn btn-default btn-xs" data-target="#magicModal" data-toggle="modal" ng-click="focusResult(r)">magic</button>
+                                <button class="btn btn-default btn-xs" data-target="#magicModal" data-toggle="modal" ng-click="focusResult(r)">  --view-- </button>
                                  <br>
                                 <span class="mark">{{r.keywords.split(",").join(" - ")}}</span> <br>
                                 <!-- <p>
@@ -70,6 +70,16 @@
             <p ng-repeat="t in focusedResult.plaintext">
                 {{t}}
             </p>
+
+            <div class="alert alert-danger">
+                <h5>Duplicates</h5>
+                <div class="">
+
+                </div>
+            </div>
+            <div class="alert alert-warning">
+                <h5>Similar items from displayed results</h5>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

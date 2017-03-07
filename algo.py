@@ -151,7 +151,7 @@ for item_count,item in enumerate(items):
                 similarity = len(similar)/(len(set(targetSentence + sourceSentence)))
                 if similarity >= threshold and source_url not in sources and target_url not in sources:
                     sources.append(source_url)
-                    pprint("Source: [{0}]{1} + Target: [{2}]{3} - SIM: {4} - ITEMS: {5}/{6}".format(r1_count,source_url[:40], r_count,target_url[:40], similarity, len(similar), len(set(targetSentence + sourceSentence))))
+                    pprint("Source: [{0}]{1} + Target: [{2}]{3} - SIM: {4}".format(r1_count,source_url[:40], r_count,target_url[:40], similarity, len(similar), len((sourceSentence))))
                     # file.write("Source: [{0}]{1} + Target: [{2}]{3} - similarity: {4}\n".format(r1_count,r1.url, r_count,r.url, similarity))
                     # file2.write("Source: [{0}]{1} + Target: [{2}]{3} - similarity: {4}\n".format(r1_count,r1.url[:20], r_count,r.url[:20], similarity))
                 
