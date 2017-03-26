@@ -40,7 +40,30 @@
                             <!-- </div> -->
                         </div>
                     </div>
-                    <div class="col-lg-12" ng-repeat="(index,r) in results" ng-hide="r.hide" ng-if="r.text.length > 0">
+                    <div class="col-lg-12" ng-repeat="(index, c) in results" ng-if="c.type=='cluster'">
+                        <div class="panel panel-default">
+                            <div class="panel-heading" ng-if="c.contains_text">
+                                <button class="btn btn-sm" ng-repeat="k in c.keywords" class="mark" ng-click="filterByKeyword($event, k)">{{k}}</button> &nbsp; &nbsp;
+                            </div>
+                            <div class="panel-body">
+                                <div class="panel panel-default">
+                                    <div class="" ng-repeat="(index,r) in c.data">
+                                        <div class="panel-body" ng-repeat="(i,res) in results" ng-if="(res.type=='result'&&res.url==r&&!res.hide)" ng-hide="filterKeywords.length>0&&res.text==''" >
+                                            <span>{{i}}</span> 
+                                            <a href="{{res.url}}" target="_blank"><span class="">{{res.title}}</span></a> 
+                                            <button class="btn btn-default btn-xs" ng-if="res.text.trim().length>0" data-target="#magicModal" data-toggle="modal" ng-click="focusResult(res)">  --view-- </button>
+                                             
+                                            <!--<span class="mark">{{r.keywords.split(",").splice(10).join(" - ")}}</span> <br>-->
+                                            <!-- <p>
+                                                {{r.text}}
+                                            </p> -->
+                                        </div>
+                                    </div> <hr>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 hidden" ng-repeat="(index,r) in results" ng-hide="r.hide" ng-if="r.type=='result'">
                         <div class="panel panel-default">
                             <div class="panel-body">
                                 <span>{{index}}</span> <a href="{{r.url}}" target="_blank"><span class="">{{r.title}}</span></a> 

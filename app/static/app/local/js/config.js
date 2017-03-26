@@ -10,7 +10,7 @@ app.factory('history', function($resource){
 
 app.controller('search', function($scope, QUERY, history){
     $scope.query = "";
-    $scope.queryQuantity = 10;
+    $scope.queryQuantity = 30;
     $scope.queryForce = false;
     $scope.results = [];
     $scope.focusedResult = "";
