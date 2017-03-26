@@ -13,17 +13,19 @@ stop = set(stopwords.words('english'))
 stemmer = PorterStemmer()
 punctuation = string.punctuation
 from pattern.en import parse
-from pattern.vector import words, count, PORTER
+from pattern.vector import words, count, PORTER, Document, Model, KMEANS
 from pattern.web import plaintext, find_urls, strip_between
 
+# driver = webdriver.Chrome(os.getcwd() + '/chromedriver')
+# driver.set_window_size(0,0)
 
 def getGoogleResults(query, quantity, news = False):
-	all_results = []
+  	all_results = []
 	query = query.replace('_','%20')
 	breakdown = 50
 
 	if breakdown > quantity:
-		breakdown = quantity
+  		breakdown = quantity
 
 	newsParams = ''
 	if news:
@@ -47,7 +49,7 @@ def getGoogleResults(query, quantity, news = False):
 		else:
 			driver = webdriver.Chrome(os.getcwd() + '/chromedriver')
 			driver.set_window_size(0,0)
-			driver.get(url)
+  			driver.get(url)
 			if news:
 				for result in driver.find_elements_by_css_selector('div.g'):
 					for css in ['a.l', 'a.top']:
@@ -62,7 +64,7 @@ def getGoogleResults(query, quantity, news = False):
 					if "youtube.co" not in url:
 						if url in all_results: print "Duplicate Results"
 						all_results.append(url)
-			driver.close()
+			# driver.close()
 
 	# all_results = list(set(all_results))
 	# print len(all_results)
@@ -83,6 +85,7 @@ def get_results(query, quantity, force = False, news = True):
 		breakdown = quantity
 
 	data_to_be_written = []
+	knowledgeKeywords = []	
 	results, created =  webSearch.objects.get_or_create(queryText = query.strip())
 	all_results = getGoogleResults(query, quantity)
 
@@ -96,28 +99,34 @@ def get_results(query, quantity, force = False, news = True):
 			data = {'url' : i}
 			if created or force:
 				a = newspaper.Article(i)
-				a.download()
-				a.parse()
 				try:
-					a.nlp()
+					a.download()
+					a.parse()
+					# a.nlp()
+					# text = a.text
 				except:
-					pass
+					print "Failed"
+					continue
+
+				# print a.authors
 
 				text = a.text
-
-				# text = plaintext(a.html)
 				# w = words(text)
 				c = count(words = words(text),top = 5,stemmer = PORTER,exclude = [],stopwords = False,language = 'en') # need the count ?
-				w = words(a.text,top = 5,stemmer = None,exclude = [],stopwords = False,language = 'en')
+				# w = words(text,top = 5,stemmer = PORTER,exclude = [],stopwords = False,language = 'en')				
 				
-				keywords = ",".join(w)
+				keywords = ",".join([w for w in c])
+				print keywords
+				# print keywords
 				data.update({
 					'keywords' : keywords,
 					'text' : text.encode('utf-8'),
 					'title' : a.title,
 					'urls' : ",".join(find_urls(strip_between("<body*>","</body", text)))
 					})
+
 				data_to_be_written.append(data)
+				
 				wr.keywords = data.get('keywords')
 				wr.text = data.get('text')
 				wr.title = data.get('title')
@@ -129,21 +138,26 @@ def get_results(query, quantity, force = False, news = True):
 					'title' : wr.title,
 					'urls' : wr.urls,
 					})
+
 			if wr not in results.results.all():
 					results.results.add(wr)
+
+			while "" in data['plaintext']:
+				data['plaintext'].remove('')
+
+			data['plaintext'] = data['text'].split('\n') # sentence
+			knowledgeKeywords.extend(data['keywords'].split(','))
 			data_to_be_written.append(data)
 		except Exception as e:
 			print e
 
-	# knowledge = []
-	knowledgeKeywords = []
 
-	for i in data_to_be_written:
-		i['plaintext'] = i.get('text').split('\n') # sentence
-		while "" in i['plaintext']:
-			i['plaintext'].remove('')
+	# for i in data_to_be_written:
+	# 	i['plaintext'] = i.get('text').split('\n') # sentence
+	# 	while "" in i['plaintext']:
+	# 		i['plaintext'].remove('')
 		
-		knowledgeKeywords.extend(i.get('keywords').split(','))
+	# 	knowledgeKeywords.extend(i.get('keywords').split(','))
 
 		# structures = []
 		# for j in i.get('text'):
@@ -162,10 +176,11 @@ def get_results(query, quantity, force = False, news = True):
 
 
 	# knowledgeKeywords = list(set(knowledgeKeywords))
-	knowledgeKeywords = words(" ".join(knowledgeKeywords),top = 20,stemmer = None,exclude = [],stopwords = False,language = 'en')
+	# knowledgeKeywords = words(" ".join(knowledgeKeywords),top = 20,stemmer = PORTER,exclude = [],stopwords = False,language = 'en')
 	# print knowledgeKeywords
 	knowledgeKeywords = list(set(knowledgeKeywords))
 	knowledgeKeywords.sort()
+	# print knowledgeKeywords
 
 	# for j in range(len(knowledgeKeywords)):
 	# 	if j >= len(knowledgeKeywords): continue
@@ -175,6 +190,19 @@ def get_results(query, quantity, force = False, news = True):
 		
 
 	# knowledgeKeywords = list(set(knowledgeKeywords))
+
+
+
+	# clustering
+	items = []
+	for i in data_to_be_written:
+		items.append(Document(i.get('text'), name=i.get('url') ))
+
+	m = Model(items)
+	c = m.cluster(method=KMEANS)
+	for i in c:
+  		print i
+
 	data_to_be_written.append({
 		'type' : 'meta',
 		'keywords' : knowledgeKeywords,
