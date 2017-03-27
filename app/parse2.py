@@ -89,12 +89,16 @@ def get_results(query, quantity, force = False, news = True):
 	data_to_be_written = []
 	knowledgeKeywords = []	
 	results, created =  webSearch.objects.get_or_create(queryText = query.strip())
-	all_results = getGoogleResults(query, quantity)
+	if created:
+		all_results = getGoogleResults(query, quantity)
+	else:
+		all_results = []
 
-	if len(all_results) == 0:
+
+	if len(all_results) == 0 and not created:
   		all_results = [r.url for r in results.results.all()[:quantity] ]
 
-	for i in all_results:
+	for index, i in enumerate(all_results):
 		try:
 			# print "Analysing {0}".format(i)
 			wr, created = WebResource.objects.get_or_create(url = i)
@@ -128,6 +132,7 @@ def get_results(query, quantity, force = False, news = True):
 					'title' : a.title,
 					'urls' : ",".join(find_urls(strip_between("<body*>","</body", text))),
 					'type' : 'result',
+					'index' : index+1,
 					})
 
 				# data_to_be_written.append(data)
@@ -143,12 +148,18 @@ def get_results(query, quantity, force = False, news = True):
 					'title' : wr.title,
 					'urls' : wr.urls,
 					'type' : 'result',
+					'index' : index+1,
 					})
 
 			if wr not in results.results.all():
 				results.results.add(wr)
 
-			data['plaintext'] = data['text'].split('\n') # sentence
+			def compress(text):
+				return ' '.join([t for t in count(words = words(data.get('text')),stemmer = LEMMA,exclude = [],stopwords = False,language = 'en')])
+
+			data['plaintext'] = data['text'].split('\n')
+
+			# data['text'] = ".\n".join([compress(s) for s in data['text'].split('\n')])
 
 			while "" in data['plaintext']:
 				data['plaintext'].remove('')
@@ -205,7 +216,7 @@ def get_results(query, quantity, force = False, news = True):
 	# clustering
 	items = []
 	for i in data_to_be_written:
-		items.append(Document(i.get('text'), name=i.get('url') ))
+		items.append(Document(i.get('text'), name=i.get('url'), description=i.get('index') ))
 
 	m = Model(items)
 	k = quantity/10
@@ -216,16 +227,25 @@ def get_results(query, quantity, force = False, news = True):
 		cluster = []
 		k = []
 		contains_text = False
+
+		# for item in i:
+		# 	for doc in m.documents:
+		# 		if m.similarity(item, doc) > 0.5:
+		# 			print "highly similar"
 		for item in i:
 			for data in data_to_be_written:
 				if data.get('type') == 'result' and data.get('url')==item.name:
-					cluster.append(data.get('url'))
+					cluster.append({
+						'url' : data.get('url'),
+						'index' : item.description,
+						})
 					if data.get('text'):
-						k.extend([w for w in count(words(data.get('text')), top=20, stemmer = LEMMA, exclude=[], stopwords=False, language='en')])
+						k.extend([w for w in count(words(data.get('text')), top=50, stemmer = LEMMA, exclude=[], stopwords=False, language='en') if w in data.get('text')])
 						contains_text=True
 		cluster = {
 			'type' : 'cluster',
 			'data' : cluster,
+			'index' : min([c.get('index') for c in cluster]),
 			'keywords' : [w for w in count(k, top=10, stemmer = LEMMA, exclude=[], stopwords=False, language='en')]
 		}
 		

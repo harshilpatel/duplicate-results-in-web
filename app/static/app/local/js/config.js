@@ -25,12 +25,13 @@ app.controller('search', function($scope, QUERY, history){
             $scope.results = QUERY.query({query:$scope.query,
                                         quantity:$scope.queryQuantity,
                                         force:$scope.queryForce,
-                                            }, function(){
+                                            }, function(results){
                                                 // $("#submitQuery").removeAttr('disabled');
                                                 $("#submitQuery").removeClass('btn-warning');
                                                 $("#submitQuery").addClass('btn-success');
+                                                console.log(results);
                                             });
-            console.clear();
+            // console.clear();
         } else{
             $("#submitQuery").addClass('btn-danger');
         }
@@ -51,7 +52,7 @@ app.controller('search', function($scope, QUERY, history){
         }
         console.log($scope.filterKeywords);
 
-        $($event.target).toggleClass('btn-success');
+        // $($event.target).toggleClass('btn-success');
 
 
         angular.forEach($scope.results, function(result, index){

@@ -35,22 +35,25 @@
                         <div class="panel panel-default">
                             <!-- <div class="panel-body"> -->
                                 <div class="panel-body" ng-repeat="r in results"  ng-if="results.length > 0 && r.type == 'meta'">
-                                    <button class="btn btn-sm" ng-repeat="k in r.keywords" ng-if="query.indexOf(k) == -1" class="mark" ng-click="filterByKeyword($event, k)">{{k}}</button> &nbsp; &nbsp;
+                                    <button class="btn btn-sm" ng-repeat="k in r.keywords" ng-if="query.indexOf(k) == -1" ng-hide="parseInt(k)" class="mark" ng-click="filterByKeyword($event, k)" ng-class="{'btn-success': filterKeywords.indexOf(k)>-1}">{{k}}</button> &nbsp; &nbsp;
                                 </div>
                             <!-- </div> -->
                         </div>
                     </div>
-                    <div class="col-lg-12" ng-repeat="(index, c) in results" ng-if="c.type=='cluster'">
+                    <div class="col-lg-12" ng-repeat="(index, c) in results | orderBy:c.index" ng-if="c.type=='cluster'">
                         <div class="panel panel-default">
                             <div class="panel-heading" ng-if="c.contains_text">
-                                <button class="btn btn-sm" ng-repeat="k in c.keywords" class="mark" ng-click="filterByKeyword($event, k)">{{k}}</button> &nbsp; &nbsp;
+                                <button class="btn btn-sm" ng-repeat="k in c.keywords" class="mark" ng-click="filterByKeyword($event, k)" ng-class="{'btn-success': filterKeywords.indexOf(k)>-1}" ng-hide="parseInt(k)">{{k}}</button> &nbsp; &nbsp;
                             </div>
                             <div class="panel-body">
                                 <div class="panel panel-default">
-                                    <div class="" ng-repeat="(index,r) in c.data">
-                                        <div class="panel-body" ng-repeat="(i,res) in results" ng-if="(res.type=='result'&&res.url==r&&!res.hide)" ng-hide="filterKeywords.length>0&&res.text==''" >
-                                            <span>{{i}}</span> 
-                                            <a href="{{res.url}}" target="_blank"><span class="">{{res.title}}</span></a> 
+                                    <div class="" ng-repeat="(index,r) in c.data | orderBy:r.index">
+                                        <div class="panel-body" ng-repeat="(i,res) in results" ng-if="(res.type=='result'&&res.url==r.url&&!res.hide)" ng-hide="filterKeywords.length>0&&res.text==''" >
+                                            <span>{{r.index}}</span> 
+                                            <a href="{{res.url}}" target="_blank">
+                                                <span class="">{{res.title}}</span>
+                                                <span class="" ng-if="!res.title">No Title: {{res.url | limitTo:100}}</span>
+                                            </a> 
                                             <button class="btn btn-default btn-xs" ng-if="res.text.trim().length>0" data-target="#magicModal" data-toggle="modal" ng-click="focusResult(res)">  --view-- </button>
                                              
                                             <!--<span class="mark">{{r.keywords.split(",").splice(10).join(" - ")}}</span> <br>-->
