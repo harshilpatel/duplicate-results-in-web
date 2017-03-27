@@ -35,7 +35,7 @@
                         <div class="panel panel-default">
                             <!-- <div class="panel-body"> -->
                                 <div class="panel-body" ng-repeat="r in results"  ng-if="results.length > 0 && r.type == 'meta'">
-                                    <button class="btn btn-sm" ng-repeat="k in r.keywords" ng-if="query.indexOf(k) == -1" ng-hide="parseInt(k)" class="mark" ng-click="filterByKeyword($event, k)" ng-class="{'btn-success': filterKeywords.indexOf(k)>-1}">{{k}}</button> &nbsp; &nbsp;
+                                    <button class="btn btn-sm" ng-repeat="k in r.keywords" ng-if="query.indexOf(k) == -1" ng-hide="parseInt(k)||k.length<3" class="mark" ng-click="filterByKeyword($event, k)" ng-class="{'btn-success': filterKeywords.indexOf(k)>-1}">{{k}}</button> &nbsp; &nbsp;
                                 </div>
                             <!-- </div> -->
                         </div>
@@ -43,7 +43,7 @@
                     <div class="col-lg-12" ng-repeat="(index, c) in results | orderBy:c.index" ng-if="c.type=='cluster'">
                         <div class="panel panel-default">
                             <div class="panel-heading" ng-if="c.contains_text">
-                                <button class="btn btn-sm" ng-repeat="k in c.keywords" class="mark" ng-click="filterByKeyword($event, k)" ng-class="{'btn-success': filterKeywords.indexOf(k)>-1}" ng-hide="parseInt(k)">{{k}}</button> &nbsp; &nbsp;
+                                <button class="btn btn-sm" ng-repeat="k in c.keywords" class="mark" ng-click="filterByKeyword($event, k)" ng-class="{'btn-success': filterKeywords.indexOf(k)>-1}" ng-hide="parseInt(k)||k.length<3">{{k}}</button> &nbsp; &nbsp;
                             </div>
                             <div class="panel-body">
                                 <div class="panel panel-default">
@@ -93,14 +93,31 @@
             <h4 class="modal-title">{{focusedResult.title}}</h4>
           </div>
           <div class="modal-body">
-            <p ng-repeat="t in focusedResult.plaintext">
+            <p ng-repeat="t in focusedResult.plaintext track by $index">
                 {{t}}
             </p>
 
-            <div class="alert alert-danger">
-                <h5>Duplicates</h5>
-                <div class="">
-
+            <hr>
+            
+            <div class="panel panel-default">
+                <div class="panel-heading">Similar</div>
+                    <div class="panel-body">
+                        <table class="table table-bordered table-hover">
+                            <tr class="" ng-repeat="(index, r) in results" ng-if="r.type=='similar'&&r.source==focusedResult.url">
+                                <td>
+                                    <span>
+                                        {{r.score | limitTo:5}}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a ng-repeat="(key, res) in results" ng-if="res.url==r.dest" href="{{res.url}}" target="_blank">
+                                        {{res.index}} - {{res.title}}
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                <div>
                 </div>
             </div>
             <div class="alert alert-warning">

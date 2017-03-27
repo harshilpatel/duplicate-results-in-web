@@ -94,13 +94,12 @@ def get_results(query, quantity, force = False, news = True):
 	else:
 		all_results = []
 
-
 	if len(all_results) == 0 and not created:
   		all_results = [r.url for r in results.results.all()[:quantity] ]
 
 	for index, i in enumerate(all_results):
 		try:
-			# print "Analysing {0}".format(i)
+			print "Analysing {0}".format(i)
 			wr, created = WebResource.objects.get_or_create(url = i)
 			data = {'url' : i}
 			if created or force:
@@ -120,8 +119,8 @@ def get_results(query, quantity, force = False, news = True):
 				if 'books.google' in data.get('url'):
 					text = ''
 				# w = words(text)
-				c = count(words = words(text),top = 10,stemmer = LEMMA,exclude = [],stopwords = False,language = 'en') # need the count ?
-				# w = words(text,top = 5,stemmer = LEMMA,exclude = [],stopwords = False,language = 'en')				
+				c = count(words = words(text),top = 10,stemmer = PORTER,exclude = [],stopwords = False,language = 'en') # need the count ?
+				# w = words(text,top = 5,stemmer = PORTER,exclude = [],stopwords = False,language = 'en')				
 				
 				keywords = ",".join([w for w in c])
 				# print keywords
@@ -133,6 +132,8 @@ def get_results(query, quantity, force = False, news = True):
 					'urls' : ",".join(find_urls(strip_between("<body*>","</body", text))),
 					'type' : 'result',
 					'index' : index+1,
+					'similar' : [],
+					'duplicates' : [],
 					})
 
 				# data_to_be_written.append(data)
@@ -149,13 +150,15 @@ def get_results(query, quantity, force = False, news = True):
 					'urls' : wr.urls,
 					'type' : 'result',
 					'index' : index+1,
+					'similar' : [],
+					'duplicates' : [],
 					})
 
 			if wr not in results.results.all():
 				results.results.add(wr)
 
 			def compress(text):
-				return ' '.join([t for t in count(words = words(data.get('text')),stemmer = LEMMA,exclude = [],stopwords = False,language = 'en')])
+				return ' '.join([t for t in count(words = words(data.get('text')),stemmer = PORTER,exclude = [],stopwords = False,language = 'en')])
 
 			data['plaintext'] = data['text'].split('\n')
 
@@ -196,7 +199,7 @@ def get_results(query, quantity, force = False, news = True):
 
 
 	# knowledgeKeywords = list(set(knowledgeKeywords))
-	knowledgeKeywords = count(knowledgeKeywords, top=20, stemmer = LEMMA, exclude=[], stopwords=False, language='en')
+	knowledgeKeywords = count(knowledgeKeywords, top=20, stemmer = PORTER, exclude=[], stopwords=False, language='en')
 	# print knowledgeKeywords
 	knowledgeKeywords = list(set([i for i in knowledgeKeywords]))
 	knowledgeKeywords.sort()
@@ -223,6 +226,19 @@ def get_results(query, quantity, force = False, news = True):
 	c = m.cluster(method=KMEANS, k=k)
 
 	print "{0} Clusters".format(len(c))
+
+	for i in m.documents:
+		for j in m.documents:
+			sim = m.similarity(i,j)
+			if sim > 0.3 and not i.description==j.description:
+				similar = {
+					'type' : 'similar',
+					'source' : i.name,
+					'dest' : j.name,
+					'score' : sim,
+				}
+				data_to_be_written.append(similar)
+
 	for i in c:
 		cluster = []
 		k = []
@@ -230,8 +246,8 @@ def get_results(query, quantity, force = False, news = True):
 
 		# for item in i:
 		# 	for doc in m.documents:
-		# 		if m.similarity(item, doc) > 0.5:
-		# 			print "highly similar"
+		# 		if m.similarity(item, doc) > 0.5 and not item.description==doc.description:
+		# 			print "Similarity - {0} [{1},{2}]".format(m.similarity(item, doc), item.description, doc.description)
 		for item in i:
 			for data in data_to_be_written:
 				if data.get('type') == 'result' and data.get('url')==item.name:
@@ -240,13 +256,13 @@ def get_results(query, quantity, force = False, news = True):
 						'index' : item.description,
 						})
 					if data.get('text'):
-						k.extend([w for w in count(words(data.get('text')), top=50, stemmer = LEMMA, exclude=[], stopwords=False, language='en') if w in data.get('text')])
+						k.extend([w for w in count(words(data.get('text')), top=50, stemmer = PORTER, exclude=[], stopwords=False, language='en') if w in data.get('text')])
 						contains_text=True
 		cluster = {
 			'type' : 'cluster',
 			'data' : cluster,
 			'index' : min([c.get('index') for c in cluster]),
-			'keywords' : [w for w in count(k, top=10, stemmer = LEMMA, exclude=[], stopwords=False, language='en')]
+			'keywords' : [w for w in count(k, top=10, stemmer = PORTER, exclude=[], stopwords=False, language='en')]
 		}
 		
 		cluster['contains_text'] = contains_text
