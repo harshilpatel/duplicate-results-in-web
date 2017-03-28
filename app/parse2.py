@@ -225,11 +225,16 @@ def get_results(query, quantity, force = False, news = True):
 	k = quantity/10
 	c = m.cluster(method=KMEANS, k=k)
 
-	# pprint(m.vector)
-	# pprint(m.vectors)
-	feature_set = []
-	for f in m.sets(0.5):
-		feature_set.extend(f)
+	# wD = m.inverted
+	# feature_set = []
+	# for s in m.sets(0.5):
+	# 	# pass
+	# 	feature_set.extend(s)
+	# 	for w in s:
+	# 		if wD.get(w):
+	# 			print len(wD.get(w))
+	# feature_set = list(set(feature_set))
+	# print feature_set
 
 	print "{0} Clusters".format(len(c))
 
@@ -244,7 +249,7 @@ def get_results(query, quantity, force = False, news = True):
 					'score' : sim,
 				}
 				data_to_be_written.append(similar)
-				print "Similarity - {0} [{1},{2}]".format(sim, i.description, j.description)
+				# print "Similarity - {0} [{1},{2}]".format(sim, i.description, j.description)
 
 	for i in c:
 		cluster = []

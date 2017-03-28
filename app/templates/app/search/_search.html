@@ -93,8 +93,10 @@
             <h4 class="modal-title">{{focusedResult.title}}</h4>
           </div>
           <div class="modal-body">
-            <p ng-repeat="t in focusedResult.plaintext track by $index">
-                {{t}}
+            <p ng-repeat="s in focusedResult.plaintext track by $index">
+                <span ng-repeat="w in s.split(' ') track by $index">
+                    {{w}}
+                </span>
             </p>
 
             <hr>

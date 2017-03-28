@@ -29,7 +29,7 @@ app.controller('search', function($scope, QUERY, history){
                                                 // $("#submitQuery").removeAttr('disabled');
                                                 $("#submitQuery").removeClass('btn-warning');
                                                 $("#submitQuery").addClass('btn-success');
-                                                console.log(results);
+                                                // console.log(results);
                                             });
             // console.clear();
         } else{
@@ -39,6 +39,17 @@ app.controller('search', function($scope, QUERY, history){
 
     $scope.focusResult = function(r){
         $scope.focusedResult = angular.copy(r);
+        $("span").css('color','black');
+        $("span").css('text-decoration','');
+        setTimeout(function() {
+            angular.forEach($scope.filterKeywords, function(value, key){
+                var target = $("span:contains("+value+")");
+                if(target.length>0){
+                    target.css('color','red');
+                    target.css('text-decoration','underline');
+                }
+            });
+        }, 3000);
     }
 
     $scope.filterByKeyword = function($event,text){
