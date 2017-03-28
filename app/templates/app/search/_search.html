@@ -48,8 +48,8 @@
                             <div class="panel-body">
                                 <div class="panel panel-default">
                                     <div class="" ng-repeat="(index,r) in c.data | orderBy:r.index">
-                                        <div class="panel-body" ng-repeat="(i,res) in results" ng-if="(res.type=='result'&&res.url==r.url&&!res.hide)" ng-hide="filterKeywords.length>0&&res.text==''" >
-                                            <span>{{r.index}}</span> 
+                                        <div class="panel-body" ng-repeat="(i,res) in results | orderBy:res.index" ng-if="(res.type=='result'&&res.url==r.url&&!res.hide)" ng-hide="filterKeywords.length>0&&res.text==''" >
+                                            <span>{{res.index}}</span> 
                                             <a href="{{res.url}}" target="_blank">
                                                 <span class="">{{res.title}}</span>
                                                 <span class="" ng-if="!res.title">No Title: {{res.url | limitTo:100}}</span>

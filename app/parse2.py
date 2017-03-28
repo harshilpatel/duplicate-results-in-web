@@ -13,7 +13,7 @@ stop = set(stopwords.words('english'))
 stemmer = PorterStemmer()
 punctuation = string.punctuation
 from pattern.en import parse
-from pattern.vector import words, count, PORTER, Document, Model, KMEANS, LEMMA
+from pattern.vector import words, count, PORTER, Document, Model, KMEANS, LEMMA, TFIDF
 from pattern.web import plaintext, find_urls, strip_between
 
 # driver = webdriver.Chrome()
@@ -89,7 +89,7 @@ def get_results(query, quantity, force = False, news = True):
 	data_to_be_written = []
 	knowledgeKeywords = []	
 	results, created =  webSearch.objects.get_or_create(queryText = query.strip())
-	if created:
+	if created or force:
 		all_results = getGoogleResults(query, quantity)
 	else:
 		all_results = []
@@ -119,10 +119,10 @@ def get_results(query, quantity, force = False, news = True):
 				if 'books.google' in data.get('url'):
 					text = ''
 				# w = words(text)
-				c = count(words = words(text),top = 10,stemmer = PORTER,exclude = [],stopwords = False,language = 'en') # need the count ?
-				# w = words(text,top = 5,stemmer = PORTER,exclude = [],stopwords = False,language = 'en')				
+				c = [w for w in count(words = words(text), top=10,stemmer = PORTER)] # need the count ?
+				# w = words(text,top=5,stemmer = PORTER)				
 				
-				keywords = ",".join([w for w in c])
+				keywords = ",".join([w for w in words(text) if w in c])
 				# print keywords
 				# print keywords
 				data.update({
@@ -158,7 +158,7 @@ def get_results(query, quantity, force = False, news = True):
 				results.results.add(wr)
 
 			def compress(text):
-				return ' '.join([t for t in count(words = words(data.get('text')),stemmer = PORTER,exclude = [],stopwords = False,language = 'en')])
+				return ' '.join([t for t in count(words = words(data.get('text')),stemmer = PORTER)])
 
 			data['plaintext'] = data['text'].split('\n')
 
@@ -219,11 +219,17 @@ def get_results(query, quantity, force = False, news = True):
 	# clustering
 	items = []
 	for i in data_to_be_written:
-		items.append(Document(i.get('text'), name=i.get('url'), description=i.get('index') ))
+		items.append(Document(i.get('text'), name=i.get('url'), description=i.get('index')+1 ))
 
-	m = Model(items)
+	m = Model(items, weight=TFIDF)
 	k = quantity/10
 	c = m.cluster(method=KMEANS, k=k)
+
+	# pprint(m.vector)
+	# pprint(m.vectors)
+	feature_set = []
+	for f in m.sets(0.5):
+		feature_set.extend(f)
 
 	print "{0} Clusters".format(len(c))
 
@@ -238,6 +244,7 @@ def get_results(query, quantity, force = False, news = True):
 					'score' : sim,
 				}
 				data_to_be_written.append(similar)
+				print "Similarity - {0} [{1},{2}]".format(sim, i.description, j.description)
 
 	for i in c:
 		cluster = []
@@ -247,7 +254,6 @@ def get_results(query, quantity, force = False, news = True):
 		# for item in i:
 		# 	for doc in m.documents:
 		# 		if m.similarity(item, doc) > 0.5 and not item.description==doc.description:
-		# 			print "Similarity - {0} [{1},{2}]".format(m.similarity(item, doc), item.description, doc.description)
 		for item in i:
 			for data in data_to_be_written:
 				if data.get('type') == 'result' and data.get('url')==item.name:
