@@ -42,7 +42,7 @@ app.controller('search', function($scope, QUERY, history){
         $("span").css('color','black');
         $("span").css('text-decoration','');
         setTimeout(function() {
-            angular.forEach($scope.filterKeywords, function(value, key){
+            angular.forEach($scope.filterKeywords.concat($scope.query.split(" ")), function(value, key){
                 var target = $("span:contains("+value+")");
                 if(target.length>0){
                     target.css('color','red');

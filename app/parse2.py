@@ -1,7 +1,9 @@
+from __future__ import division
 import os, requests, sys, string
 from bs4 import BeautifulSoup
 import newspaper
 import nltk
+import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem.porter import *
 from datetime import datetime
@@ -99,7 +101,7 @@ def get_results(query, quantity, force = False, news = True):
 
 	for index, i in enumerate(all_results):
 		try:
-			print "Analysing {0}".format(i)
+			# print "Analysing {0}".format(i)
 			wr, created = WebResource.objects.get_or_create(url = i)
 			data = {'url' : i}
 			if created or force:
@@ -127,7 +129,7 @@ def get_results(query, quantity, force = False, news = True):
 				# print keywords
 				data.update({
 					'keywords' : keywords,
-					'text' : text.encode('utf-8'),
+					'text' : str(text.encode('utf-8', 'replace').lower()),
 					'title' : a.title,
 					'urls' : ",".join(find_urls(strip_between("<body*>","</body", text))),
 					'type' : 'result',
@@ -222,7 +224,7 @@ def get_results(query, quantity, force = False, news = True):
 		items.append(Document(i.get('text'), name=i.get('url'), description=i.get('index')+1 ))
 
 	m = Model(items, weight=TFIDF)
-	k = quantity/10
+	k = 10
 	c = m.cluster(method=KMEANS, k=k)
 
 	# wD = m.inverted
@@ -236,7 +238,47 @@ def get_results(query, quantity, force = False, news = True):
 	# feature_set = list(set(feature_set))
 	# print feature_set
 
-	print "{0} Clusters".format(len(c))
+
+
+	# Caluclation custom modal
+	y = len(m.documents)
+	x = len(m.vector)
+	v = [w for w in m.vector if w not in stop]
+	x = len(v)
+	d = [d for d in m.documents]
+	
+	model = np.zeros((y,x))
+
+	for i in range(y):
+		for j in range(x):
+			if v[j] in d[i].words:
+				model[i][j] = 1
+
+	for i in range(y):
+		for j in range(i+1,y):
+			a = np.copy(model[i])
+			b = np.copy(model[j])
+
+			a_ones = np.count_nonzero(a)
+			b_ones = np.count_nonzero(b)
+
+			# b[b==0]=-1
+			comparison = (a==b)
+
+			score = a*b
+			score = np.count_nonzero(score)
+
+			if a_ones >1 and b_ones>1:
+				score = (score)/(a_ones+b_ones)
+			else:
+				score = 0 
+			if model[i].any() and model[j].any() and comparison.any() and score > 0.3:
+				print "Match {0}{1} - {2}{3} : {4} words".format(d[i].name[:30], np.count_nonzero(a), d[j].name[:30], np.count_nonzero(b), score)
+
+
+	# print model>0
+
+	# print "{0} Clusters".format(len(c))
 
 	for i in m.documents:
 		for j in m.documents:
@@ -267,7 +309,7 @@ def get_results(query, quantity, force = False, news = True):
 						'index' : item.description,
 						})
 					if data.get('text'):
-						k.extend([w for w in count(words(data.get('text')), top=50, stemmer = PORTER, exclude=[], stopwords=False, language='en') if w in data.get('text')])
+						k.extend([w for w in count(words(data.get('text')), top=50, stemmer = PORTER, exclude=[], stopwords=False, language='en')])
 						contains_text=True
 		cluster = {
 			'type' : 'cluster',
@@ -280,8 +322,8 @@ def get_results(query, quantity, force = False, news = True):
 
 		data_to_be_written.append(cluster)
 
-		if i:
-			print "{0} in this cluster".format(len(i))
+		# if i:
+		# 	print "{0} in this cluster".format(len(i))
 		# print "\n\n"
 
 
