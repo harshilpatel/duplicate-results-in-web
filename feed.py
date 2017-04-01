@@ -53,35 +53,35 @@ from app.parse2 import *
 # pprint(sample)
 
 sample = [
-  # 'air india problems',
-  # 'network programming',
-  # 'donald trump',
-  # 'golang',
-  # 'golang python',
-  # 'hydrogen metal',
-  # 'hyperloop india',
-  # 'iphone x',
-  # 'lenovo problems',
-  # 'mahatma gandhi murder',
-  # 'make in india',
-  # 'mallya',
-  # 'modi india',
-  # 'air deccan',
-  # 'samsung battery explosion',
-  # 'sasikala',
-  # 'palaniswami',
-  # 'pakistan sufi',
-  # 'uttar pradesh elections',
-  # 'income tax department',
-  # 'spacex nasa',
-  # 'falcon wings',
-  # 'trump boeing visit',
-  # 'demonetisation',
-  # 'airline screen seats',
-  # 'russia trump',
-  # 'kim jong nam assassination',
-  # 'jolly llb 2 collections',
-  # 'india australia',
+  'air india problems',
+  'network programming',
+  'donald trump',
+  'golang',
+  'golang python',
+  'hydrogen metal',
+  'hyperloop india',
+  'iphone x',
+  'lenovo problems',
+  'mahatma gandhi murder',
+  'make in india',
+  'mallya',
+  'modi india',
+  'air deccan',
+  'samsung battery explosion',
+  'sasikala',
+  'palaniswami',
+  'pakistan sufi',
+  'uttar pradesh elections',
+  'income tax department',
+  'spacex nasa',
+  'falcon wings',
+  'trump boeing visit',
+  'demonetisation',
+  'airline screen seats',
+  'russia trump',
+  'kim jong nam assassination',
+  'jolly llb 2 collections',
+  'india australia',
   'Hafiz Saeed pakistan',
   # '',
 ]
@@ -90,9 +90,10 @@ if len(sys.argv) == 3:
   sample = [sys.argv[2]]
   result_count = int(sys.argv[1])
 
-for i in sample:
+for i in reversed(sample):
   result_count = 100
   if len(sys.argv) == 2:
     result_count = int(sys.argv[1])
-  print "Getting {0} results for {i}".format(result_count, i)
-  get_results(i, result_count, True)
+  print "Getting {0} results for {1}".format(result_count, i)
+  # get_results(i, result_count, force = True, news = False, analysis = False)
+  getGoogleResults(i, result_count, news = False, force = False)

@@ -10,7 +10,7 @@ app.factory('history', function($resource){
 
 app.controller('search', function($scope, QUERY, history){
     $scope.query = "";
-    $scope.queryQuantity = 30;
+    $scope.queryQuantity = 50;
     $scope.queryForce = false;
     $scope.results = [];
     $scope.focusedResult = "";
@@ -30,6 +30,14 @@ app.controller('search', function($scope, QUERY, history){
                                                 $("#submitQuery").removeClass('btn-warning');
                                                 $("#submitQuery").addClass('btn-success');
                                                 // console.log(results);
+                                                var total_results = 0;
+                                                angular.forEach(results, function(r){
+                                                    if(r.type=='result'){
+                                                        total_results += 1;
+                                                    }
+                                                })
+                                                $scope.total_results = total_results;
+                                                $scope.filterKeywords = [];
                                             });
             // console.clear();
         } else{
@@ -42,14 +50,21 @@ app.controller('search', function($scope, QUERY, history){
         $("span").css('color','black');
         $("span").css('text-decoration','');
         setTimeout(function() {
-            angular.forEach($scope.filterKeywords.concat($scope.query.split(" ")), function(value, key){
+            angular.forEach($scope.filterKeywords, function(value, key){
                 var target = $("span:contains("+value+")");
                 if(target.length>0){
                     target.css('color','red');
                     target.css('text-decoration','underline');
                 }
             });
-        }, 3000);
+            angular.forEach($scope.query.split(" "), function(value, key){
+                var target = $("span:contains("+value+")");
+                if(target.length>0){
+                    target.css('color','green');
+                    target.css('text-decoration','underline');
+                }
+            });
+        }, 2000);
     }
 
     $scope.filterByKeyword = function($event,text){

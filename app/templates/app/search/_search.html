@@ -29,18 +29,18 @@
             <div class="panel panel-default">
                 <div class="panel-body">
                      <div class="col-lg-12" ng-if="results.length > 0">
-                        <span>{{results.length}} results</span>
+                        <span>{{total_results}} results</span>
                     </div>
                     <div class="col-lg-12">
                         <div class="panel panel-default">
                             <!-- <div class="panel-body"> -->
                                 <div class="panel-body" ng-repeat="r in results"  ng-if="results.length > 0 && r.type == 'meta'">
-                                    <button class="btn btn-sm" ng-repeat="k in r.keywords" ng-if="query.indexOf(k) == -1" ng-hide="parseInt(k)||k.length<3" class="mark" ng-click="filterByKeyword($event, k)" ng-class="{'btn-success': filterKeywords.indexOf(k)>-1}">{{k}}</button> &nbsp; &nbsp;
+                                    <button class="btn btn-sm" ng-repeat="k in r.keywords" ng-hide="parseInt(k)||k.length<3" class="mark" ng-click="filterByKeyword($event, k)" ng-class="{'btn-success': filterKeywords.indexOf(k)>-1}">{{k}}</button> &nbsp; &nbsp;
                                 </div>
                             <!-- </div> -->
                         </div>
                     </div>
-                    <div class="col-lg-12" ng-repeat="(index, c) in results|orderBy:'index'" ng-if="c.type=='cluster'">
+                    <div class="col-lg-12 hidden" ng-repeat="(index, c) in results|orderBy:'index'" ng-if="c.type=='cluster'">
                         <div class="panel panel-default">
                             <div class="panel-heading" ng-if="c.contains_text">
                                 <button class="btn btn-sm" ng-repeat="k in c.keywords" class="mark" ng-click="filterByKeyword($event, k)" ng-class="{'btn-success': filterKeywords.indexOf(k)>-1}" ng-hide="parseInt(k)||k.length<3">{{k}}</button> &nbsp; &nbsp;
@@ -66,16 +66,32 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-12 hidden" ng-repeat="(index,r) in results" ng-hide="r.hide" ng-if="r.type=='result'">
+                    <div class="col-lg-12" ng-repeat="(index,r) in results" ng-hide="(r.hide)||(filterKeywords.length>0&&r.text.length==0)" ng-if="r.type=='result'">
                         <div class="panel panel-default">
                             <div class="panel-body">
-                                <span>{{index}}</span> <a href="{{r.url}}" target="_blank"><span class="">{{r.title}}</span></a> 
-                                <button class="btn btn-default btn-xs" data-target="#magicModal" data-toggle="modal" ng-click="focusResult(r)">  --view-- </button>
+                                <span>{{r.index}}</span>
+                                    <a href="{{r.url}}" target="_blank">
+                                        <b ng-if="r.title">{{r.title}}</b>
+                                        <b ng-if="!r.title">{{r.url | limitTo:20}}</b>
+                                    </a> 
+                                <button ng-if="r.text.trim().length>0" class="btn btn-default btn-xs" data-target="#magicModal" data-toggle="modal" ng-click="focusResult(r)">  --view-- </button>
                                  <br>
-                                <!--<span class="mark">{{r.keywords.split(",").splice(10).join(" - ")}}</span> <br>-->
-                                <!-- <p>
-                                    {{r.text}}
-                                </p> -->
+                                <table class="table table-bordered table-hover">
+                                    <tr class="" ng-repeat="(sim_index, sim_r) in results" ng-if="sim_r.type=='similar'&&sim_r.source==r.url">
+                                        <td>
+                                            <span>
+                                                <!-- {{sim_r.score*100 | limitTo:2}}% -->
+                                                {{sim_r.score | limitTo:4}}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a ng-repeat="(key, res) in results" ng-if="(res.url==sim_r.dest)" href="{{res.url}}" target="_blank">{{res.index}} - 
+                                                <span ng-if="res.title">{{res.title}}</span>
+                                                <span ng-if="!res.title">{{res.url | limitTo:20}}</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
                             </div>
                         </div>
                     </div>

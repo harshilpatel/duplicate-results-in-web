@@ -1,4 +1,5 @@
 from __future__ import division
+import math
 import os, requests, sys, string
 from bs4 import BeautifulSoup
 import newspaper
@@ -11,23 +12,52 @@ from app.models import *
 from selenium import webdriver
 from pprint import pprint
 
+from django.core.exceptions import MultipleObjectsReturned
+
 stop = set(stopwords.words('english'))
 stemmer = PorterStemmer()
 punctuation = string.punctuation
-from pattern.en import parse
-from pattern.vector import words, count, PORTER, Document, Model, KMEANS, LEMMA, TFIDF
+from pattern.en import parse, wordnet
+from pattern.vector import words, count, PORTER, Document, Model, KMEANS, LEMMA, TFIDF, HIERARCHICAL
 from pattern.web import plaintext, find_urls, strip_between
 
 # driver = webdriver.Chrome()
 # driver.set_window_size(0,0)
 
-def getGoogleResults(query, quantity, news = False):
-  	all_results = []
+def parseURL(url, force = False):
+	try:
+		wr, created = WebResource.objects.get_or_create(url = url)
+	except MultipleObjectsReturned:
+		WebResource.objects.filter(url = url).delete()
+
+	wr, created = WebResource.objects.get_or_create(url = url)
+	if created or force:
+		print "Parsing and Caching {0}".format(url)
+		a = newspaper.Article(url)
+		try:
+			a.download()
+			a.parse()
+			text = a.text
+			title = a.title
+
+			if 'books.google' in url:
+				text = ''
+
+			wr.text = str(text.encode('utf-8', 'replace').lower())
+			wr.title = a.title
+			wr.urls = ",".join(find_urls(strip_between("<body*>","</body", text)))
+			wr.save()	
+		except:
+			print "Failed"
+	return wr
+
+def getGoogleResults(query, quantity, news = False, force = False):
+	all_results = []
 	query = query.replace('_','%20')
 	breakdown = 50
 
 	if breakdown > quantity:
-  		breakdown = quantity
+		breakdown = quantity
 
 	newsParams = ''
 	if news:
@@ -49,9 +79,9 @@ def getGoogleResults(query, quantity, news = False):
 					all_results.append(href)
 
 		else:
-			driver = webdriver.Chrome()
+			driver = webdriver.Chrome(os.getcwd()+'/chromedriver')
 			driver.set_window_size(0,0)
-  			driver.get(url)
+			driver.get(url)
 			if news:
 				for result in driver.find_elements_by_css_selector('div.g'):
 					for css in ['a.l', 'a.top']:
@@ -70,16 +100,15 @@ def getGoogleResults(query, quantity, news = False):
 							all_results.append(url)
 			driver.close()
 
-	# all_results = list(set(all_results))
-	# print len(all_results)
+	for i in all_results:
+		parseURL(i, force)
+
 
 	return all_results
 
 
-def get_results(query, quantity, force = False, news = True):
+def get_results(query, quantity, force = False, news = False, analysis = True):
 	query = query.lower()
-	# driver = webdriver.Chrome()
-	# driver.set_window_size(0,0)
 	start = datetime.now()
 
 	query = query.replace('_','%20')
@@ -90,162 +119,82 @@ def get_results(query, quantity, force = False, news = True):
 
 	data_to_be_written = []
 	knowledgeKeywords = []	
+	duplicates = []
 	results, created =  webSearch.objects.get_or_create(queryText = query.strip())
 	if created or force:
-		all_results = getGoogleResults(query, quantity)
+		all_results = getGoogleResults(query, quantity, news, force)
 	else:
 		all_results = []
 
 	if len(all_results) == 0 and not created:
-  		all_results = [r.url for r in results.results.all()[:quantity] ]
+		all_results = [r.url for r in results.results.all()]
+
+	all_results = all_results[:quantity]
 
 	for index, i in enumerate(all_results):
 		try:
-			# print "Analysing {0}".format(i)
-			wr, created = WebResource.objects.get_or_create(url = i)
+			wr = parseURL(i, force)
+
 			data = {'url' : i}
-			if created or force:
-				a = newspaper.Article(i)
-				try:
-					a.download()
-					a.parse()
-					# a.nlp()
-					# text = a.text
-				except:
-					print "Failed"
-					# continue
 
-				# print a.authors
+			keywords = [w for w in count(wr.text, top = 10, stemmer = LEMMA) if w not in stop]
 
-				text = a.text
-				if 'books.google' in data.get('url'):
-					text = ''
-				# w = words(text)
-				c = [w for w in count(words = words(text), top=10,stemmer = PORTER)] # need the count ?
-				# w = words(text,top=5,stemmer = PORTER)				
-				
-				keywords = ",".join([w for w in words(text) if w in c])
-				# print keywords
-				# print keywords
-				data.update({
-					'keywords' : keywords,
-					'text' : str(text.encode('utf-8', 'replace').lower()),
-					'title' : a.title,
-					'urls' : ",".join(find_urls(strip_between("<body*>","</body", text))),
-					'type' : 'result',
-					'index' : index+1,
-					'similar' : [],
-					'duplicates' : [],
-					})
-
-				# data_to_be_written.append(data)
-				
-				wr.keywords = data.get('keywords')
-				wr.text = data.get('text')
-				wr.title = data.get('title')
-				wr.save()
+			if 'books.google' in i:
+				text = ''
 			else:
-				data.update({
-					'keywords' : wr.keywords,
-					'text' : wr.text,
-					'title' : wr.title,
-					'urls' : wr.urls,
-					'type' : 'result',
-					'index' : index+1,
-					'similar' : [],
-					'duplicates' : [],
-					})
+				text = wr.text
+
+			data.update({
+				'keywords' : keywords,
+				'text' : text,
+				'title' : wr.title,
+				'urls' : wr.urls,
+				'type' : 'result',
+				'index' : index+1,
+				'similar' : [],
+				'duplicates' : [],
+				'category' : 0,
+				})
 
 			if wr not in results.results.all():
 				results.results.add(wr)
 
-			def compress(text):
-				return ' '.join([t for t in count(words = words(data.get('text')),stemmer = PORTER)])
-
 			data['plaintext'] = data['text'].split('\n')
-
-			# data['text'] = ".\n".join([compress(s) for s in data['text'].split('\n')])
 
 			while "" in data['plaintext']:
 				data['plaintext'].remove('')
 
-			knowledgeKeywords.extend(data['keywords'].split(','))
+			knowledgeKeywords.extend(data['keywords'])
 
 			data_to_be_written.append(data)
 		except Exception as e:
-			print ""
-			# print e
+			print "ERROR"
+			print e
+
+	if not analysis:
+		return data_to_be_written
 
 
-	# for i in data_to_be_written:
-	# 	i['plaintext'] = i.get('text').split('\n') # sentence
-	# 	while "" in i['plaintext']:
-	# 		i['plaintext'].remove('')
-		
-	# 	knowledgeKeywords.extend(i.get('keywords').split(','))
-
-		# structures = []
-		# for j in i.get('text'):
-			# structures.append(j.split())
-
-		# i['text'] = structures
-		# try:
-			# import pdb; pdb.set_trace()
-			# keywords = i.get('keywords').split(',')
-			# for i in keywords:
-				# knowledgeKeywords.add(i)
-		# except Exception as e:
-			# print "ERR - "
-			# print e
-
-
-
-	# knowledgeKeywords = list(set(knowledgeKeywords))
-	knowledgeKeywords = count(knowledgeKeywords, top=20, stemmer = PORTER, exclude=[], stopwords=False, language='en')
-	# print knowledgeKeywords
-	knowledgeKeywords = list(set([i for i in knowledgeKeywords]))
-	knowledgeKeywords.sort()
-	# print knowledgeKeywords
-
-	# for j in range(len(knowledgeKeywords)):
-	# 	if j >= len(knowledgeKeywords): continue
-	# 	item = knowledgeKeywords[j]
-	# 	if item in stop or len(item) <= 1:
-	# 		knowledgeKeywords.remove(item)
-		
-
-	# knowledgeKeywords = list(set(knowledgeKeywords))
-
-
+	# knowledgeKeywords = [w for w in count(knowledgeKeywords, top=20, stemmer = LEMMA)]
+	# knowledgeKeywords.sort()
 
 	# clustering
 	items = []
 	for i in data_to_be_written:
-		items.append(Document(i.get('text'), name=i.get('url'), description=i.get('index')+1 ))
+		items.append(Document(i.get('text'), name=i.get('url'), description=i.get('index')+1, stemmer = LEMMA))
 
 	m = Model(items, weight=TFIDF)
 	k = 10
 	c = m.cluster(method=KMEANS, k=k)
 
-	# wD = m.inverted
-	# feature_set = []
-	# for s in m.sets(0.5):
-	# 	# pass
-	# 	feature_set.extend(s)
-	# 	for w in s:
-	# 		if wD.get(w):
-	# 			print len(wD.get(w))
-	# feature_set = list(set(feature_set))
-	# print feature_set
+	####### BEGIN Experimental Setup ##########
 
-
-
-	# Caluclation custom modal
+	# Calulation custom modal
 	y = len(m.documents)
-	x = len(m.vector)
-	v = [w for w in m.vector if w not in stop]
+	# x = len(m.vector)
+	v = m.features
 	x = len(v)
-	d = [d for d in m.documents]
+	d = m.documents
 	
 	model = np.zeros((y,x))
 
@@ -254,77 +203,96 @@ def get_results(query, quantity, force = False, news = True):
 			if v[j] in d[i].words:
 				model[i][j] = 1
 
-	for i in range(y):
-		for j in range(i+1,y):
-			a = np.copy(model[i])
-			b = np.copy(model[j])
 
-			a_ones = np.count_nonzero(a)
-			b_ones = np.count_nonzero(b)
+	def find_match(model, words = None, d = None):
+		y,x = model.shape
+		for i in range(y):
+			for j in range(i+1,y):
+				a = np.copy(model[i])
+				b = np.copy(model[j])
 
-			# b[b==0]=-1
-			comparison = (a==b)
+				a_ones = np.count_nonzero(a)
+				b_ones = np.count_nonzero(b)
 
-			score = a*b
-			score = np.count_nonzero(score)
+				comparison = (a==b)
 
-			if a_ones >1 and b_ones>1:
-				score = (score)/(a_ones+b_ones)
-			else:
-				score = 0 
-			if model[i].any() and model[j].any() and comparison.any() and score > 0.3:
-				print "Match {0}{1} - {2}{3} : {4} words".format(d[i].name[:30], np.count_nonzero(a), d[j].name[:30], np.count_nonzero(b), score)
+				score = a*b
+				score = np.count_nonzero(score)
 
+				if a_ones+b_ones>0 and a_ones+b_ones-score > 0:
+					score = (score)/(a_ones+b_ones-score)
+				else:
+					score = 0 
 
-	# print model>0
+				if model[i].any() and model[j].any() and comparison.any() and score > 0.2:
+					print "Match [{0}] {1}:[{2}] - [{3}] {4}:[{5}] : {6} words".format(d[i].description,d[i].name[:30], np.count_nonzero(a), d[j].description,d[j].name[:30], np.count_nonzero(b), score, math.fabs(d[i].description - d[j].description))
+					similar = {
+						'type' : 'similar',
+						'source' : d[i].name,
+						'dest' : d[j].name,
+						'score' : score,
+					}
+					data_to_be_written.append(similar)
 
-	# print "{0} Clusters".format(len(c))
+				if score >= 0.9:
+					for res in data_to_be_written:
+						if res['type'] in ['result','duplicate'] and res['url'] == d[j].name and len(res['text'])>0:
+							print "Duplicate {0}.{1}".format(i,j)
+							res['type'] = 'duplicate'
+		return model
 
-	for i in m.documents:
-		for j in m.documents:
-			sim = m.similarity(i,j)
-			if sim > 0.3 and not i.description==j.description:
-				similar = {
-					'type' : 'similar',
-					'source' : i.name,
-					'dest' : j.name,
-					'score' : sim,
-				}
-				data_to_be_written.append(similar)
-				# print "Similarity - {0} [{1},{2}]".format(sim, i.description, j.description)
+	def idf(model, words = None, documents = None, threshold1 = 0, threshold2 = 0, transpose = False):
+		# if transpose:
+		# 	model = model.transpose()
+		y,x = model.shape
+		data = {}
 
-	for i in c:
-		cluster = []
-		k = []
-		contains_text = False
+		for i in range(x):
+			count = np.count_nonzero(model[:,i])/y
+			if count >= threshold1 and count <= threshold2:
+				if words:
+					data[words[i]] = count
+				else:
+					data[i] = count
+		return data
 
-		# for item in i:
-		# 	for doc in m.documents:
-		# 		if m.similarity(item, doc) > 0.5 and not item.description==doc.description:
-		for item in i:
-			for data in data_to_be_written:
-				if data.get('type') == 'result' and data.get('url')==item.name:
-					cluster.append({
-						'url' : data.get('url'),
-						'index' : item.description,
-						})
-					if data.get('text'):
-						k.extend([w for w in count(words(data.get('text')), top=50, stemmer = PORTER, exclude=[], stopwords=False, language='en')])
-						contains_text=True
-		cluster = {
-			'type' : 'cluster',
-			'data' : cluster,
-			'index' : min([c.get('index') for c in cluster]),
-			'keywords' : [w for w in count(k, top=10, stemmer = PORTER, exclude=[], stopwords=False, language='en')]
-		}
+	def df(text, threshold = 0):
+		data = {}
+		doc = Document(text, stemmer=PORTER, threshold = threshold)
+
+		return doc.words
+
+	model = find_match(model, v, d)
+
+	knowledgeKeywords = [w for w in idf(model, v,d,0.4,0.7)]
+
+	####### END Experimental Setup ##########
+
+	# for i in c:
+	# 	cluster = []
+	# 	k = []
+	# 	contains_text = False
+
+	# 	for item in i:
+	# 		for data in data_to_be_written:
+	# 			if data.get('type') == 'result' and data.get('url')==item.name:
+	# 				cluster.append({
+	# 					'url' : data.get('url'),
+	# 					'index' : item.description,
+	# 					})
+	# 				if data.get('text'):
+	# 					k.extend([w for w in count(words(data.get('text')), top=50, stemmer = PORTER, exclude=[], stopwords=False, language='en')])
+	# 					contains_text=True
+	# 	cluster = {
+	# 		'type' : 'cluster',
+	# 		'data' : cluster,
+	# 		'index' : min([c.get('index') for c in cluster] + [0]),
+	# 		'keywords' : [w for w in count(k, top=10, stemmer = PORTER, exclude=[], stopwords=False, language='en')]
+	# 	}
 		
-		cluster['contains_text'] = contains_text
+	# 	cluster['contains_text'] = contains_text
 
-		data_to_be_written.append(cluster)
-
-		# if i:
-		# 	print "{0} in this cluster".format(len(i))
-		# print "\n\n"
+	# 	data_to_be_written.append(cluster)
 
 
 	print "{0} results".format(len(data_to_be_written))
@@ -336,4 +304,6 @@ def get_results(query, quantity, force = False, news = True):
 
 	# print "Time Taken to get results [Cached/new] {0} minutes".format((datetime.now() - start).seconds/60)
 	# driver.close()
+
+
 	return data_to_be_written

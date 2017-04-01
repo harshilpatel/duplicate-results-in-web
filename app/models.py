@@ -56,6 +56,8 @@ class WebResource(models.Model):
 	resourceType = models.CharField(max_length = 100, default = "0", choices = WebResourceChoices)
 	url = models.TextField(blank = True)
 	text = models.TextField(blank = True)
+	# plaintext = models.TextField(blank = True)
+	# normalised_text = models.TextField(blank = True)
 	keywords = models.TextField(blank = True)
 	title = models.CharField(max_length = 500, blank = True)
 	urls = models.TextField(blank = True)
