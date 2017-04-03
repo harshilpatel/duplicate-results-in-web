@@ -12,6 +12,8 @@ from app.models import *
 from selenium import webdriver
 from pprint import pprint
 
+from multiprocessing import Process
+
 from django.core.exceptions import MultipleObjectsReturned
 
 stop = set(stopwords.words('english'))
@@ -25,6 +27,7 @@ from pattern.web import plaintext, find_urls, strip_between
 # driver.set_window_size(0,0)
 
 def parseURL(url, force = False):
+	"Parses the given url and saves it to Database"
 	try:
 		wr, created = WebResource.objects.get_or_create(url = url)
 	except MultipleObjectsReturned:
@@ -46,9 +49,10 @@ def parseURL(url, force = False):
 			wr.text = str(text.encode('utf-8', 'replace').lower())
 			wr.title = a.title
 			wr.urls = ",".join(find_urls(strip_between("<body*>","</body", text)))
-			wr.save()	
+			wr.save()
+			print "  PARSED ", url
 		except:
-			print "Failed"
+			print "  Failed"
 	return wr
 
 def getGoogleResults(query, quantity, news = False, force = False):
@@ -68,7 +72,7 @@ def getGoogleResults(query, quantity, news = False, force = False):
 			url = 'https://www.google.com/search?q={0}&num={1}{2}'.format(query, breakdown, newsParams)
 		else:
 			url = 'https://www.google.com/search?q={0}&num={1}&start={2}{3}'.format(query, breakdown, i, newsParams)
-			
+
 		if os.environ.get('heroku'):
 			soup = BeautifulSoup(requests.get(url).text, 'lxml')
 			for link in soup.find_all('a'):
@@ -100,11 +104,25 @@ def getGoogleResults(query, quantity, news = False, force = False):
 							all_results.append(url)
 			driver.close()
 
+	queue = [] # Queue to line up Processes and run them later as required
+
 	for i in all_results:
-		parseURL(i, force)
+		print "Adding to Queue:", i
+		queue.append(Process(target=parseURL, args=(i, force)))
 
+	# Run the queued Processes
+	for index, p in enumerate(queue):
+	    if index>=4:
+	        while queue[index-4].is_alive():
+	            pass
+	        p.start()
+	    else:
+	        p.start()
+	else:
+		while sum([0]+[1 for p in queue if p.is_alive()]) > 0:
+			pass
 
-	return all_results
+	return all_results # Return the results once finished Parsing
 
 
 def get_results(query, quantity, force = False, news = False, analysis = True):
@@ -118,10 +136,10 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 		breakdown = quantity
 
 	data_to_be_written = []
-	knowledgeKeywords = []	
+	knowledgeKeywords = []
 	duplicates = []
 	results, created =  webSearch.objects.get_or_create(queryText = query.strip())
-	if created or force:
+	if created or force or len(results.results.all()) < quantity:
 		all_results = getGoogleResults(query, quantity, news, force)
 	else:
 		all_results = []
@@ -130,13 +148,12 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 		all_results = [r.url for r in results.results.all()]
 
 	all_results = all_results[:quantity]
+	print "TOTAL RESULTS ", str(len(all_results))
 
 	for index, i in enumerate(all_results):
 		try:
-			wr = parseURL(i, force)
-
+			wr = WebResource.objects.get(url = i)
 			data = {'url' : i}
-
 			keywords = [w for w in count(wr.text, top = 10, stemmer = LEMMA) if w not in stop]
 
 			if 'books.google' in i:
@@ -185,24 +202,24 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 
 	m = Model(items, weight=TFIDF)
 	k = 10
-	c = m.cluster(method=KMEANS, k=k)
 
 	####### BEGIN Experimental Setup ##########
 
 	# Calulation custom modal
-	y = len(m.documents)
-	# x = len(m.vector)
-	v = m.features
-	x = len(v)
-	d = m.documents
-	
-	model = np.zeros((y,x))
+	v,d = m.features, m.documents
+	y,x = len(m.documents),len(m.features)
 
-	for i in range(y):
-		for j in range(x):
-			if v[j] in d[i].words:
-				model[i][j] = 1
 
+	def build_matrix(w = None, d = None):
+		y,x = len(m.documents),len(m.features)
+		model = np.zeros((y,x))
+
+		for i in range(y):
+			for j in range(x):
+				if w[j] in d[i].words:
+					model[i][j] = 1
+
+		return model
 
 	def find_match(model, words = None, d = None):
 		y,x = model.shape
@@ -216,16 +233,17 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 
 				comparison = (a==b)
 
-				score = a*b
-				score = np.count_nonzero(score)
+				cross_product = a*b
+				union = np.count_nonzero(cross_product)
+				intersection = a_ones+b_ones-union
 
-				if a_ones+b_ones>0 and a_ones+b_ones-score > 0:
-					score = (score)/(a_ones+b_ones-score)
+				if a_ones+b_ones>0 and intersection > 0:
+					score = union/intersection
 				else:
-					score = 0 
+					score = 0
 
 				if model[i].any() and model[j].any() and comparison.any() and score > 0.2:
-					print "Match [{0}] {1}:[{2}] - [{3}] {4}:[{5}] : {6} words".format(d[i].description,d[i].name[:30], np.count_nonzero(a), d[j].description,d[j].name[:30], np.count_nonzero(b), score, math.fabs(d[i].description - d[j].description))
+					print "Match [{0}] {1}:[{2} w] - [{3}] {4}:[{5} w] : {6} words".format(d[i].description,d[i].name[:30], np.count_nonzero(a), d[j].description,d[j].name[:30], np.count_nonzero(b), score, math.fabs(d[i].description - d[j].description))
 					similar = {
 						'type' : 'similar',
 						'source' : d[i].name,
@@ -237,7 +255,7 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 				if score >= 0.9:
 					for res in data_to_be_written:
 						if res['type'] in ['result','duplicate'] and res['url'] == d[j].name and len(res['text'])>0:
-							print "Duplicate {0}.{1}".format(i,j)
+							print "Duplicate [{0}].[{1}]".format(i,j)
 							res['type'] = 'duplicate'
 		return model
 
@@ -262,12 +280,13 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 
 		return doc.words
 
+	model = build_matrix(m.features, m.documents)
 	model = find_match(model, v, d)
-
-	knowledgeKeywords = [w for w in idf(model, v,d,0.4,0.7)]
+	knowledgeKeywords = [w for w in idf(model, v, d, 0.4, 0.7)][:20]
 
 	####### END Experimental Setup ##########
 
+	# c = m.cluster(method=KMEANS, k=k)
 	# for i in c:
 	# 	cluster = []
 	# 	k = []
@@ -289,7 +308,7 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 	# 		'index' : min([c.get('index') for c in cluster] + [0]),
 	# 		'keywords' : [w for w in count(k, top=10, stemmer = PORTER, exclude=[], stopwords=False, language='en')]
 	# 	}
-		
+
 	# 	cluster['contains_text'] = contains_text
 
 	# 	data_to_be_written.append(cluster)
@@ -300,7 +319,7 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 		'type' : 'meta',
 		'keywords' : knowledgeKeywords,
 		})
-		
+
 
 	# print "Time Taken to get results [Cached/new] {0} minutes".format((datetime.now() - start).seconds/60)
 	# driver.close()

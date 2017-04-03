@@ -16,7 +16,7 @@
             <label class="control-label"><input type="checkbox" ng-model="queryForce" placeholder="Force"/>&nbsp;&nbsp;&nbsp;Force</label>
         </div>
         <div class="col-lg-2">
-            <select ng-model="queryEngine" class="form-control">
+            <select ng-model="queryEngine" class="form-control hidden">
                 <option>Google</option>
                 <option>Wikipedia</option>
             </select>
@@ -49,13 +49,13 @@
                                 <div class="panel panel-default">
                                     <div class="" ng-repeat="(index,r) in c.data|orderBy:'index'">
                                         <div class="panel-body" ng-repeat="(i,res) in results|orderBy:'index'" ng-if="(res.type=='result'&&res.url==r.url&&!res.hide)" ng-hide="filterKeywords.length>0&&res.text==''" >
-                                            <span>{{res.index}}</span> 
+                                            <span>{{res.index}}</span>
                                             <a href="{{res.url}}" target="_blank">
                                                 <span class="">{{res.title}}</span>
                                                 <span class="" ng-if="!res.title">No Title: {{res.url | limitTo:100}}</span>
-                                            </a> 
+                                            </a>
                                             <button class="btn btn-default btn-xs" ng-if="res.text.trim().length>0" data-target="#magicModal" data-toggle="modal" ng-click="focusResult(res)">  --view-- </button>
-                                             
+
                                             <!--<span class="mark">{{r.keywords.split(",").splice(10).join(" - ")}}</span> <br>-->
                                             <!-- <p>
                                                 {{r.text}}
@@ -73,11 +73,11 @@
                                     <a href="{{r.url}}" target="_blank">
                                         <b ng-if="r.title">{{r.title}}</b>
                                         <b ng-if="!r.title">{{r.url | limitTo:20}}</b>
-                                    </a> 
+                                    </a>
                                 <button ng-if="r.text.trim().length>0" class="btn btn-default btn-xs" data-target="#magicModal" data-toggle="modal" ng-click="focusResult(r)">  --view-- </button>
                                  <br>
                                 <table class="table table-bordered table-hover">
-                                    <tr class="" ng-repeat="(sim_index, sim_r) in results" ng-if="sim_r.type=='similar'&&sim_r.source==r.url">
+                                    <tr ng-repeat="(sim_index, sim_r) in results" ng-if="sim_r.type=='similar'&&sim_r.source==r.url" ng-class="{'highlight':sim_r.score>=0.9}">
                                         <td>
                                             <span>
                                                 <!-- {{sim_r.score*100 | limitTo:2}}% -->
@@ -85,7 +85,7 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <a ng-repeat="(key, res) in results" ng-if="(res.url==sim_r.dest)" href="{{res.url}}" target="_blank">{{res.index}} - 
+                                            <a ng-repeat="(key, res) in results" ng-if="(res.url==sim_r.dest)" href="{{res.url}}" target="_blank">{{res.index}} -
                                                 <span ng-if="res.title">{{res.title}}</span>
                                                 <span ng-if="!res.title">{{res.url | limitTo:20}}</span>
                                             </a>
@@ -116,12 +116,12 @@
             </p>
 
             <hr>
-            
+
             <div class="panel panel-default">
                 <div class="panel-heading">Similar</div>
                     <div class="panel-body">
                         <table class="table table-bordered table-hover">
-                            <tr class="" ng-repeat="(index, r) in results" ng-if="r.type=='similar'&&r.source==focusedResult.url">
+                            <tr class="" ng-repeat="(index, r) in results" ng-if="r.type=='similar'&&r.source==focusedResult.url&&r.score<0.9">
                                 <td>
                                     <span>
                                         {{r.score | limitTo:5}}
@@ -139,7 +139,21 @@
                 </div>
             </div>
             <div class="alert alert-warning">
-                <h5>Similar items from displayed results</h5>
+                <h5>Duplicate</h5>
+                <table class="table table-bordered table-hover">
+                    <tr class="highlight" ng-repeat="(index, r) in results" ng-if="r.type=='similar'&&r.source==focusedResult.url&&r.score>=0.9">
+                        <td>
+                            <span>
+                                {{r.score | limitTo:5}}
+                            </span>
+                        </td>
+                        <td>
+                            <a ng-repeat="(key, res) in results" ng-if="res.url==r.dest" href="{{res.url}}" target="_blank">
+                                {{res.index}} - {{res.title}}
+                            </a>
+                        </td>
+                    </tr>
+                </table>
             </div>
           </div>
           <div class="modal-footer">

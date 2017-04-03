@@ -8,7 +8,7 @@ app.factory('history', function($resource){
     return $resource('/history');
 })
 
-app.controller('search', function($scope, QUERY, history){
+app.controller('search', function($scope, $timeout, QUERY, history){
     $scope.query = "";
     $scope.queryQuantity = 50;
     $scope.queryForce = false;
@@ -16,6 +16,17 @@ app.controller('search', function($scope, QUERY, history){
     $scope.focusedResult = "";
     $scope.filterKeywords = [];
     $scope.history = history.query();
+
+    $scope.calculateVisible = function(){
+     var resCounter = 0;
+      angular.forEach($scope.results, function(r){
+          if(r.type=='result' && r.hide == false){
+              resCounter += 1;
+          }
+      })
+
+      $scope.total_results = resCounter;
+    }
 
     $scope.search = function(){
         $("#submitQuery").removeClass('btn-danger');
@@ -94,6 +105,7 @@ app.controller('search', function($scope, QUERY, history){
                 })
             }
         })
+        $scope.calculateVisible();
     }
 })
 
