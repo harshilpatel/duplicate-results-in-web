@@ -198,7 +198,7 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 	# clustering
 	items = []
 	for i in data_to_be_written:
-		items.append(Document(i.get('text'), name=i.get('url'), description=i.get('index')+1, stemmer = LEMMA))
+		items.append(Document(i.get('text'), name=i.get('url'), description=i.get('index'), stemmer = LEMMA))
 
 	m = Model(items, weight=TFIDF)
 	k = 10
@@ -242,7 +242,7 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 				else:
 					score = 0
 
-				if model[i].any() and model[j].any() and comparison.any() and score > 0.2:
+				if model[i].any() and model[j].any() and comparison.any() and score > 0.4:
 					print "Match [{0}] {1}:[{2} w] - [{3}] {4}:[{5} w] : {6} words".format(d[i].description,d[i].name[:30], np.count_nonzero(a), d[j].description,d[j].name[:30], np.count_nonzero(b), score, math.fabs(d[i].description - d[j].description))
 					similar = {
 						'type' : 'similar',
@@ -255,7 +255,7 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 				if score >= 0.9:
 					for res in data_to_be_written:
 						if res['type'] in ['result','duplicate'] and res['url'] == d[j].name and len(res['text'])>0:
-							print "Duplicate [{0}].[{1}]".format(i,j)
+							print "Duplicate [{0}].[{1}]".format(i+1,j+1)
 							res['type'] = 'duplicate'
 		return model
 
