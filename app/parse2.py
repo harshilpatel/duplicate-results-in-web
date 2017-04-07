@@ -83,7 +83,7 @@ def getGoogleResults(query, quantity, news = False, force = False):
 					all_results.append(href)
 
 		else:
-			driver = webdriver.Chrome(os.getcwd()+'/chromedriver')
+			driver = webdriver.Chrome(os.getcwd()+'\chromedriver.exe')
 			driver.set_window_size(0,0)
 			driver.get(url)
 			if news:
