@@ -4,6 +4,7 @@ import os, requests, sys, string
 from bs4 import BeautifulSoup
 import newspaper
 import nltk
+from nltk.tokenize import sent_tokenize, word_tokenize
 import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem.porter import *
@@ -35,7 +36,7 @@ def parseURL(url, force = False):
 
 	wr, created = WebResource.objects.get_or_create(url = url)
 	if created or force:
-		print "Parsing and Caching {0}".format(url)
+		# print "Parsing and Caching {0}".format(url)
 		a = newspaper.Article(url)
 		try:
 			a.download()
@@ -83,7 +84,7 @@ def getGoogleResults(query, quantity, news = False, force = False):
 					all_results.append(href)
 
 		else:
-			driver = webdriver.Chrome(os.getcwd()+'\chromedriver.exe')
+			driver = webdriver.Chrome(os.getcwd()+'/chromedriver')
 			driver.set_window_size(0,0)
 			driver.get(url)
 			if news:
@@ -107,7 +108,7 @@ def getGoogleResults(query, quantity, news = False, force = False):
 	queue = [] # Queue to line up Processes and run them later as required
 
 	for i in all_results:
-		print "Adding to Queue:", i
+		# print "Adding to Queue:", i
 		queue.append(Process(target=parseURL, args=(i, force)))
 
 	# Run the queued Processes
@@ -149,6 +150,9 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 
 	all_results = all_results[:quantity]
 	print "TOTAL RESULTS ", str(len(all_results))
+	# Done with getting search results
+
+
 
 	for index, i in enumerate(all_results):
 		try:
@@ -163,7 +167,7 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 
 			data.update({
 				'keywords' : keywords,
-				'text' : text,
+				'text' : plaintext(text),
 				'title' : wr.title,
 				'urls' : wr.urls,
 				'type' : 'result',
@@ -188,6 +192,7 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 			print "ERROR"
 			print e
 
+	print "Response Result model Prepared"
 	if not analysis:
 		return data_to_be_written
 
@@ -196,22 +201,18 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 	# knowledgeKeywords.sort()
 
 	# clustering
-	items = []
-	for i in data_to_be_written:
-		items.append(Document(i.get('text'), name=i.get('url'), description=i.get('index'), stemmer = LEMMA))
+	items = [Document(i.get('text'), name=i.get('url'), description=i.get('index'), stemmer = LEMMA) for i in data_to_be_written]
 
 	m = Model(items, weight=TFIDF)
 	k = 10
-
 	####### BEGIN Experimental Setup ##########
 
-	# Calulation custom modal
 	v,d = m.features, m.documents
 	y,x = len(m.documents),len(m.features)
 
 
 	def build_matrix(w = None, d = None):
-		y,x = len(m.documents),len(m.features)
+		y,x = len(d),len(w)
 		model = np.zeros((y,x))
 
 		for i in range(y):
@@ -221,7 +222,7 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 
 		return model
 
-	def find_match(model, words = None, d = None):
+	def find_word_matches(model, words = None, d = None):
 		y,x = model.shape
 		for i in range(y):
 			for j in range(i+1,y):
@@ -234,16 +235,16 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 				comparison = (a==b)
 
 				cross_product = a*b
-				union = np.count_nonzero(cross_product)
-				intersection = a_ones+b_ones-union
+				intersection = np.count_nonzero(cross_product)
+				union = a_ones+b_ones-intersection
 
 				if a_ones+b_ones>0 and intersection > 0:
-					score = union/intersection
+					score = intersection/union
 				else:
 					score = 0
 
 				if model[i].any() and model[j].any() and comparison.any() and score > 0.4:
-					print "Match [{0}] {1}:[{2} w] - [{3}] {4}:[{5} w] : {6} words".format(d[i].description,d[i].name[:30], np.count_nonzero(a), d[j].description,d[j].name[:30], np.count_nonzero(b), score, math.fabs(d[i].description - d[j].description))
+					print "Match [{0}] {1}:[{2} words] - [{3}] {4}:[{5} words] : {6} words".format(d[i].description,d[i].name[:30], np.count_nonzero(a), d[j].description,d[j].name[:30], np.count_nonzero(b), score, math.fabs(d[i].description - d[j].description))
 					similar = {
 						'type' : 'similar',
 						'source' : d[i].name,
@@ -259,9 +260,8 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 							res['type'] = 'duplicate'
 		return model
 
-	def idf(model, words = None, documents = None, threshold1 = 0, threshold2 = 0, transpose = False):
-		# if transpose:
-		# 	model = model.transpose()
+	def word_frequency(model, words = None, documents = None, threshold1 = 0, threshold2 = 1, transpose = False):
+		"Returns frequent word amoung documents in range of threshold"
 		y,x = model.shape
 		data = {}
 
@@ -274,19 +274,13 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 					data[i] = count
 		return data
 
-	def df(text, threshold = 0):
-		data = {}
-		doc = Document(text, stemmer=PORTER, threshold = threshold)
-
-		return doc.words
-
 	model = build_matrix(m.features, m.documents)
-	model = find_match(model, v, d)
-	knowledgeKeywords = [w for w in idf(model, v, d, 0.4, 0.7)][:20]
+	model = find_word_matches(model, m.features, m.documents)
+	knowledgeKeywords = [w for w in word_frequency(model, m.features, m.documents, 0.4, 0.7)][:20]
 
 	####### END Experimental Setup ##########
 
-	# c = m.cluster(method=KMEANS, k=k)
+	# c = m.cluster(method=HIERARCHICAL, k=k)
 	# for i in c:
 	# 	cluster = []
 	# 	k = []

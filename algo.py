@@ -1,11 +1,12 @@
 from __future__ import division
-import os, requests, sys 
+# run as algo.py 0.3 1
+import os, requests, sys
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "beproject.settings")
 django.setup()
 
 
-import os, requests, sys 
+import os, requests, sys
 from bs4 import BeautifulSoup
 import newspaper
 import nltk
@@ -32,7 +33,7 @@ items = webSearch.objects.all()
 
 threshold = 0.1
 if len(sys.argv) == 2:
-    threshold = float(sys.argv[1]) 
+    threshold = float(sys.argv[1])
 
 def getWords(text):
     return words(text, stemmer = LEMMA,exclude = [],stopwords = False,language = 'en')  # seeing same results with stemmer.stem, LEMMA, PORTER
@@ -46,16 +47,16 @@ def cleanSring(text):
     # text = parse(text)
     # text = Text(text, token=[LEMMA])
 
-    
+
     # pprint(keywords)
-    
+
     for i,sentence in enumerate(text):
         words_in_sentence = getWords(sentence)
         # for j,item in enumerate(words_in_sentence):
         #     words_in_sentence[j] = stemmer.stem(item)
             # if item not in keywords:
                 # words_in_sentence.remove(item)
-        
+
         # words_in_sentence = collapse_spaces(" ".join(words_in_sentence), indentation = False, replace = " ")
         if len(words_in_sentence) > 0:
             text[i] = sorted(words_in_sentence)
@@ -64,7 +65,7 @@ def cleanSring(text):
             text[i] = ""
         # if "actions" in text[i]:
         #     print text[i]
-    
+
     while "" in text:
         text.remove("")
 
@@ -75,7 +76,7 @@ def cleanSring(text):
 
     # pprint(text)
     # exit(0)
-        
+
     return text
 
 # file = open('news-api.txt','w')
@@ -142,24 +143,27 @@ def calc(item = items.first()):
                     pprint("Source: [{0}]{1} + Target: [{2}]{3} - SIM: {4}".format(r1_count,source_url[:40], r_count,target_url[:40], similarity, len(similar), len((sourceSentence))))
                     # file.write("Source: [{0}]{1} + Target: [{2}]{3} - similarity: {4}\n".format(r1_count,r1.url, r_count,r.url, similarity))
                     # file2.write("Source: [{0}]{1} + Target: [{2}]{3} - similarity: {4}\n".format(r1_count,r1.url[:20], r_count,r.url[:20], similarity))
-                
+
             # print r_count
 
 # file.close()
 # file2.close()
 
-def analyse():
+def analyse(items = [items.first()]):
     for item_count,item in enumerate(reversed(items)):
         print "#"*20
-        print item.queryText
+        print "Test Query: "+item.queryText
         result = get_results(item.queryText, 50, force = False, news = False, analysis = True)
 
-        calc(item)
+        # calc(item)
         for i in result:
             if i.get('type')=='similar' and i.get('score')>threshold:
                 pass
                 # print "RESULTS: {0} {1} - {2} words".format(i.get('source')[:30], i.get('dest')[:30], i.get('score'))
 
 # calc()
-analyse()
 
+if len(sys.argv) == 3:
+    analyse([items[int(sys.argv[2])]])
+else:
+    analyse(items)

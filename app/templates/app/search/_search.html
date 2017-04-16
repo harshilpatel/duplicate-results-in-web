@@ -1,31 +1,33 @@
 {%verbatim%}
 <script id="search.htm" type="text/ng-template" ng-controller="search">
-    <div class="container">
-        <div class="col-lg-3">
-            <input type="text" name="query" class="form-control col-lg-4" placeholder="Enter your query" ng-model="query" autofocus />
-        </div>
-        <div class="col-lg-3">
-            <select class="form-control" ng-model="query">
-                <option ng-repeat="h in history">{{h}}</option>
-            </select>
-        </div>
-        <div class="col-lg-1">
-            <input type="number" class="form-control" value="10" ng-model="queryQuantity">
-        </div>
-        <div class="col-lg-1">
-            <label class="control-label"><input type="checkbox" ng-model="queryForce" placeholder="Force"/>&nbsp;&nbsp;&nbsp;Force</label>
-        </div>
-        <div class="col-lg-2">
-            <select ng-model="queryEngine" class="form-control hidden">
-                <option>Google</option>
-                <option>Wikipedia</option>
-            </select>
-        </div>
-        <div class="col-lg-2">
-            <button id="submitQuery" class="btn btn-default" ng-click="search()">Search</button>
+    <div>
+        <div class="col-lg-12" style="padding-bottom: 1em">
+         <div class="col-lg-3">
+          <input type="text" name="query" class="form-control col-lg-4" placeholder="Enter your query" ng-model="query" autofocus />
+         </div>
+         <div class="col-lg-3">
+          <select class="form-control" ng-model="query">
+           <option ng-repeat="h in history">{{h}}</option>
+          </select>
+         </div>
+         <div class="col-lg-1">
+          <input type="number" class="form-control" value="10" ng-model="queryQuantity">
+         </div>
+         <div class="col-lg-1">
+          <label class="control-label"><input type="checkbox" ng-model="queryForce" placeholder="Force"/>&nbsp;&nbsp;&nbsp;Force</label>
+         </div>
+         <div class="col-lg-2">
+          <select ng-model="queryEngine" class="form-control hidden">
+           <option>Google</option>
+           <option>Wikipedia</option>
+          </select>
+         </div>
+         <div class="col-lg-2">
+          <button id="submitQuery" class="btn btn-default" ng-click="search()">Search</button>
+         </div>
         </div>
         <hr>
-        <div class="col-lg-12">
+        <div class="col-lg-6" style="height:100%; overflow-y: scroll;" ng-if="results.length>0">
             <div class="panel panel-default">
                 <div class="panel-body">
                      <div class="col-lg-12" ng-if="results.length > 0">
@@ -72,7 +74,7 @@
                                 <span>{{r.index}}</span>
                                     <a href="{{r.url}}" target="_blank">
                                         <b ng-if="r.title">{{r.title}}</b>
-                                        <b ng-if="!r.title">{{r.url | limitTo:20}}</b>
+                                        <b ng-if="!r.title">{{r.url}}</b>
                                     </a>
                                 <button ng-if="r.text.trim().length>0" class="btn btn-default btn-xs" data-target="#magicModal" data-toggle="modal" ng-click="focusResult(r)">  --view-- </button>
                                  <br>
@@ -92,6 +94,29 @@
                                         </td>
                                     </tr>
                                 </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6" style="height:100%; overflow-y: scroll; border-left: black 2px solid" ng-if="results.length>0">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                     <div class="col-lg-12" ng-if="results.length > 0">
+                        <span>{{all_results}} results</span>
+                    </div>
+                    <div class="col-lg-12" ng-repeat="(index,r) in results" ng-if="r.type=='result'||r.type=='duplicate'">
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <span>{{r.index}}</span>
+                                    <a href="{{r.url}}" target="_blank">
+                                        <b ng-if="r.title">{{r.title}}</b>
+                                        <b ng-if="!r.title">{{r.url}}</b>
+                                    </a>
+                                <button ng-if="r.text.trim().length>0" class="btn btn-default btn-xs" data-target="#magicModal" data-toggle="modal" ng-click="focusResult(r)">  --view-- </button>
+                                 <br>
+
                             </div>
                         </div>
                     </div>

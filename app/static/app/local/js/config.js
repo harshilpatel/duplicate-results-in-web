@@ -42,12 +42,17 @@ app.controller('search', function($scope, $timeout, QUERY, history){
                                                 $("#submitQuery").addClass('btn-success');
                                                 // console.log(results);
                                                 var total_results = 0;
+                                                var all_results = 0;
                                                 angular.forEach(results, function(r){
                                                     if(r.type=='result'){
                                                         total_results += 1;
                                                     }
+                                                    if(r.type=='result' || r.type == 'duplicate'){
+                                                        all_results += 1;
+                                                    }
                                                 })
                                                 $scope.total_results = total_results;
+                                                $scope.all_results = all_results;
                                                 $scope.filterKeywords = [];
                                             });
             // console.clear();
