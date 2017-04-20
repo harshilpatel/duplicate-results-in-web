@@ -147,11 +147,3 @@ if 'RDS_DB_NAME' in os.environ:
 			'PORT': os.environ['RDS_PORT'],
 		}
 	}
-
-try:
-	import nltk
-	nltk.download('stopwords')
-	nltk.download('maxent_treebank_pos_tagger')
-	nltk.download('punkt')
-except:
-	pass
