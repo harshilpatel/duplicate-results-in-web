@@ -257,7 +257,7 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 
 	results, created =  webSearch.objects.get_or_create(queryText = query.strip())
 	if created or force or len(results.results.all()) < quantity:
-		all_results = getGoogleResults(query, quantity, news, True)
+		all_results = getGoogleResults(query, quantity, news, force)
 	else:
 		all_results = []
 
@@ -330,15 +330,8 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 					res['type'] = 'duplicate'
 
 
-	# return data_to_be_written
-
-	# return data_to_be_written
-	# knowledgeKeywords = [w for w in count(knowledgeKeywords, top=20, stemmer = LEMMA)]
-	# knowledgeKeywords.sort()
-
-	# items = [Document(i.get('text'), name=i.get('url'), description=i.get('index'), stemmer = LEMMA) for i in data_to_be_written]
-
-	# m = Model(items, weight=TFIDF)
+	items = [Document(i.get('text'), name=i.get('url'), description=i.get('index'), stemmer = LEMMA) for i in data_to_be_written]
+	m = Model(items, weight=TFIDF)
 	# k = 10
 	####### BEGIN Experimental Setup ##########
 
@@ -346,14 +339,14 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 	# y,x = len(m.documents),len(m.features)
 
 
-	# def build_matrix(w = None, d = None):
-	# 	y,x = len(d),len(w)
-	# 	model = np.zeros((y,x))
+	def build_matrix(w = None, d = None):
+		y,x = len(d),len(w)
+		model = np.zeros((y,x))
 
-	# 	for i in range(y):
-	# 		model[i] = [1 if w[j] in d[i].words else 0 for j in range(x)]
+		for i in range(y):
+			model[i] = [1 if w[j] in d[i].words else 0 for j in range(x)]
 
-	# 	return model
+		return model
 
 	# def find_word_matches(model, words = None, d = None):
 	# 	y,x = model.shape
@@ -407,7 +400,7 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 					data[i] = count
 		return data
 
-	# model = build_matrix(m.features, m.documents)
+	model = build_matrix(m.features, m.documents)
 	# model = find_word_matches(model, m.features, m.documents)
 	knowledgeKeywords = [w for w in word_frequency(model, m.features, m.documents, 0.2, 0.8)][:20]
 
