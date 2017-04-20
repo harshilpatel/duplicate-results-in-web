@@ -18,6 +18,7 @@ from multiprocessing import Process
 from django.core.exceptions import MultipleObjectsReturned
 
 stop = set(stopwords.words('english'))
+stopwords_hash = {w:1 for w in stop}
 stemmer = PorterStemmer()
 punctuation = string.punctuation
 from pattern.en import parse, wordnet
@@ -113,17 +114,131 @@ def getGoogleResults(query, quantity, news = False, force = False):
 
 	# Run the queued Processes
 	for index, p in enumerate(queue):
-	    if index>=4:
-	        while queue[index-4].is_alive():
-	            pass
-	        p.start()
-	    else:
-	        p.start()
+			if index>=4:
+					while queue[index-4].is_alive():
+							pass
+					p.start()
+			else:
+					p.start()
 	else:
 		while sum([0]+[1 for p in queue if p.is_alive()]) > 0:
 			pass
 
 	return all_results # Return the results once finished Parsing
+
+
+def match_rows(a, b):
+	a_ones = np.count_nonzero(a)
+	b_ones = np.count_nonzero(b)
+
+	comparison = (a==b)
+
+	cross_product = a*b
+	intersection = np.count_nonzero(cross_product)
+	union = a_ones+b_ones-intersection
+
+	if a_ones+b_ones>0 and union > 0:
+		score = intersection/union
+	else:
+		score = 0
+
+	return score
+
+def build_model(results = []):
+	documents = [Document(i.get('text'), name=i.get('url'), description=i.get('index'), stemmer = LEMMA) for i in results]
+	m = Model(documents, weight = TFIDF)
+
+	y,x = 1,len(m.features)
+	model = np.zeros((y,x))
+
+	sentence_dict = {}
+	model_sentences = []
+	for i_index, i in enumerate(documents):
+		sentences =  sent_tokenize(results[i_index].get('text').lower())
+
+		dy, dx = len(sentences), x
+		for s_index, s in enumerate(sentences):
+			s_words = {w:1 for w in words(s, stemmer = LEMMA, stopwords = False) if not stopwords_hash.get(w)}
+			if len(s_words) < 5:
+				continue
+			model_sentences.append(s)
+			model = np.append(model, [[1 if s_words.get(w) else 0 for w in m.features]], 0)
+			sentence_dict[model.shape[0]-1] = i.name
+			# model_sentences[model.shape[0]-1] = s
+
+	model = np.delete(model, (0), 0)
+
+	return model, m, model_sentences, sentence_dict
+
+def get_similar_rows(model = np.array((1,1)), sentences = [], sentence_dict = {}):
+	print len(sentences)
+	print model.shape
+
+	y,x = model.shape
+	similar_rows = []
+	for i in range(y):
+		source = sentence_dict.get(i)
+		for j in range(i,y):
+			dest = sentence_dict.get(j)
+			if source==dest or i==j: continue
+			
+			score = match_rows(model[i], model[j])
+
+			if score > 0.8:
+				similar_rows.append([i,j])
+				# print sentences[i]
+				# print sentences[j]
+
+	return similar_rows
+
+
+def find_similarity(results = []):
+	model, m, sentences, sentence_dict = build_model(results)
+	similar_rows = get_similar_rows(model, sentences, sentence_dict)
+
+	list_of_sim_docs = []
+
+	if similar_rows:
+		print "Number of similar sentences {0} repetitions over {1}".format(len(similar_rows), len(sentences))
+		for i in results:
+			try:
+				source = i.get('url')
+				source_len = len([1 for s,s_name in sentence_dict.iteritems() if s_name == source])
+				for j in results:
+					if i==j: continue
+
+					dest = j.get('url')
+					dest_len = len([1 for s,s_name in sentence_dict.iteritems() if s_name == dest])
+
+					matched_sentences = [1 for s in similar_rows if sentence_dict[s[0]]==source and sentence_dict[s[1]]==dest]
+
+					similarity = 0
+
+					if dest_len > 0:
+						similarity = len(matched_sentences)/min([dest_len, source_len])
+						# similarity = len(matched_sentences)/(source_len+dest_len-len(matched_sentences))
+
+					if similarity > 0.3 and similarity < 0.8:
+						print "Similar  document {0}[{1}] {2}[{3}] [{4}][{5}]".format(source[:10], source_len, dest[:10], dest_len, similarity, len(matched_sentences))
+					elif similarity >= 0.8 and similarity < 1.0:
+						print "Highly-P documents {0}[{1}] {2}[{3}] [{4}][{5}]".format(source[:10], source_len, dest[:10], dest_len, similarity, len(matched_sentences))
+					elif similarity ==1:
+						print "Exactly-P documents {0}[{1}] {2}[{3}] [{4}][{5}]".format(source[:10], source_len, dest[:10], dest_len, similarity, len(matched_sentences))
+
+					if similarity > 0.4 and similarity < 1:
+						list_of_sim_docs.append({
+							'source' : source,
+							'dest' : dest,
+							'score' : similarity
+							})
+					if similarity > 1:
+						print 'Error'
+			except: pass	
+	else:
+		pass
+
+	return list_of_sim_docs, model, m
+	
 
 
 def get_results(query, quantity, force = False, news = False, analysis = True):
@@ -139,9 +254,10 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 	data_to_be_written = []
 	knowledgeKeywords = []
 	duplicates = []
+
 	results, created =  webSearch.objects.get_or_create(queryText = query.strip())
 	if created or force or len(results.results.all()) < quantity:
-		all_results = getGoogleResults(query, quantity, news, force)
+		all_results = getGoogleResults(query, quantity, news, True)
 	else:
 		all_results = []
 
@@ -182,10 +298,10 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 
 			data['plaintext'] = data['text'].split('\n')
 
-			while "" in data['plaintext']:
+			while '' in data['plaintext']:
 				data['plaintext'].remove('')
 
-			knowledgeKeywords.extend(data['keywords'])
+			# knowledgeKeywords.extend(data['keywords'])
 
 			data_to_be_written.append(data)
 		except Exception as e:
@@ -193,72 +309,89 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 			print e
 
 	print "Response Result model Prepared"
+
 	if not analysis:
 		return data_to_be_written
 
+	list_of_sim_docs, model, m = find_similarity(data_to_be_written)
+	for i in list_of_sim_docs:
+		similar = {
+			'type' : 'similar',
+			'source' : i.get('source'),
+			'dest' : i.get('dest'),
+			'score' : i.get('score'),
+		}
+		data_to_be_written.append(similar)
 
+		if similar['score'] > 0.9:
+			for res in data_to_be_written:
+				if res['type'] in ['result','duplicate'] and res['url'] == i.get('dest') and len(res['text'])>0:
+					print "Duplicate [{0}].[{1}]".format(i['source'][:20],i['dest'][:20])
+					res['type'] = 'duplicate'
+
+
+	# return data_to_be_written
+
+	# return data_to_be_written
 	# knowledgeKeywords = [w for w in count(knowledgeKeywords, top=20, stemmer = LEMMA)]
 	# knowledgeKeywords.sort()
 
-	# clustering
-	items = [Document(i.get('text'), name=i.get('url'), description=i.get('index'), stemmer = LEMMA) for i in data_to_be_written]
+	# items = [Document(i.get('text'), name=i.get('url'), description=i.get('index'), stemmer = LEMMA) for i in data_to_be_written]
 
-	m = Model(items, weight=TFIDF)
-	k = 10
+	# m = Model(items, weight=TFIDF)
+	# k = 10
 	####### BEGIN Experimental Setup ##########
 
-	v,d = m.features, m.documents
-	y,x = len(m.documents),len(m.features)
+	# v,d = m.features, m.documents
+	# y,x = len(m.documents),len(m.features)
 
 
-	def build_matrix(w = None, d = None):
-		y,x = len(d),len(w)
-		model = np.zeros((y,x))
+	# def build_matrix(w = None, d = None):
+	# 	y,x = len(d),len(w)
+	# 	model = np.zeros((y,x))
 
-		for i in range(y):
-			for j in range(x):
-				if w[j] in d[i].words:
-					model[i][j] = 1
+	# 	for i in range(y):
+	# 		model[i] = [1 if w[j] in d[i].words else 0 for j in range(x)]
 
-		return model
+	# 	return model
 
-	def find_word_matches(model, words = None, d = None):
-		y,x = model.shape
-		for i in range(y):
-			for j in range(i+1,y):
-				a = np.copy(model[i])
-				b = np.copy(model[j])
+	# def find_word_matches(model, words = None, d = None):
+	# 	y,x = model.shape
+	# 	for i in range(y):
+	# 		for j in range(i+1,y):
+	# 			a = np.copy(model[i])
+	# 			b = np.copy(model[j])
 
-				a_ones = np.count_nonzero(a)
-				b_ones = np.count_nonzero(b)
+	# 			a_ones = np.count_nonzero(a)
+	# 			b_ones = np.count_nonzero(b)
 
-				comparison = (a==b)
+	# 			comparison = (a==b)
 
-				cross_product = a*b
-				intersection = np.count_nonzero(cross_product)
-				union = a_ones+b_ones-intersection
+	# 			cross_product = a*b
+	# 			intersection = np.count_nonzero(cross_product)
+	# 			union = a_ones+b_ones-intersection
 
-				if a_ones+b_ones>0 and intersection > 0:
-					score = intersection/union
-				else:
-					score = 0
+	# 			if a_ones+b_ones>0 and intersection > 0:
+	# 				score = intersection/union
+	# 			else:
+	# 				score = 0
 
-				if model[i].any() and model[j].any() and comparison.any() and score > 0.4:
-					print "Match [{0}] {1}:[{2} words] - [{3}] {4}:[{5} words] : {6} words".format(d[i].description,d[i].name[:30], np.count_nonzero(a), d[j].description,d[j].name[:30], np.count_nonzero(b), score, math.fabs(d[i].description - d[j].description))
-					similar = {
-						'type' : 'similar',
-						'source' : d[i].name,
-						'dest' : d[j].name,
-						'score' : score,
-					}
-					data_to_be_written.append(similar)
+	# 			if model[i].any() and model[j].any() and comparison.any() and score > 0.4:
+	# 				print "Match [{0}] {1}:[{2} words] - [{3}] {4}:[{5} words] : {6} words".format(d[i].description,d[i].name[:30], np.count_nonzero(a), d[j].description,d[j].name[:30], np.count_nonzero(b), score, math.fabs(d[i].description - d[j].description))
+	# 				similar = {
+	# 					'type' : 'similar',
+	# 					'source' : d[i].name,
+	# 					'dest' : d[j].name,
+	# 					'score' : score,
+	# 				}
+	# 				data_to_be_written.append(similar)
 
-				if score >= 0.9:
-					for res in data_to_be_written:
-						if res['type'] in ['result','duplicate'] and res['url'] == d[j].name and len(res['text'])>0:
-							print "Duplicate [{0}].[{1}]".format(i+1,j+1)
-							res['type'] = 'duplicate'
-		return model
+	# 			if score >= 0.9:
+	# 				for res in data_to_be_written:
+	# 					if res['type'] in ['result','duplicate'] and res['url'] == d[j].name and len(res['text'])>0:
+	# 						print "Duplicate [{0}].[{1}]".format(i+1,j+1)
+	# 						res['type'] = 'duplicate'
+	# 	return model
 
 	def word_frequency(model, words = None, documents = None, threshold1 = 0, threshold2 = 1, transpose = False):
 		"Returns frequent word amoung documents in range of threshold"
@@ -274,9 +407,9 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 					data[i] = count
 		return data
 
-	model = build_matrix(m.features, m.documents)
-	model = find_word_matches(model, m.features, m.documents)
-	knowledgeKeywords = [w for w in word_frequency(model, m.features, m.documents, 0.4, 0.7)][:20]
+	# model = build_matrix(m.features, m.documents)
+	# model = find_word_matches(model, m.features, m.documents)
+	knowledgeKeywords = [w for w in word_frequency(model, m.features, m.documents, 0.2, 0.8)][:20]
 
 	####### END Experimental Setup ##########
 
@@ -308,15 +441,14 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 	# 	data_to_be_written.append(cluster)
 
 
-	print "{0} results".format(len(data_to_be_written))
+	# print "{0} results".format(len(data_to_be_written))
 	data_to_be_written.append({
 		'type' : 'meta',
 		'keywords' : knowledgeKeywords,
 		})
 
 
-	# print "Time Taken to get results [Cached/new] {0} minutes".format((datetime.now() - start).seconds/60)
-	# driver.close()
+	print "Time Taken to get results [Cached/new] {0} ".format((datetime.now() - start).seconds)
 
 
 	return data_to_be_written
