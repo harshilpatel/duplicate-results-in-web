@@ -14,15 +14,13 @@ structural_tags = (
 	('3','reference'),
 	)
 
+##### Old Models #####
 class link(models.Model):
 	url = models.TextField(blank = True)
 	title = models.TextField(blank = True)
 	text = models.TextField(blank = True)
 	keywords = models.TextField(blank = True)
 	structuralCandidates = models.ManyToManyField('structuralCandidates', related_name = "struct")
-	# wordCandidates = models.ManyToManyField('wordCandidate')
-	# contextualCandidates = models.ManyToManyField('contextualCandidates')
-	# structuralCandidates = models.ManyToManyField('structuralCandidates')
 
 class wordCandidate(models.Model):
 	text = models.TextField()

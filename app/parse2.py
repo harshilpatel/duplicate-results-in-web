@@ -34,12 +34,14 @@ def parseURL(url, force = False):
 		wr, created = WebResource.objects.get_or_create(url = url)
 	except MultipleObjectsReturned:
 		WebResource.objects.filter(url = url).delete()
+	except:
+		pass
 
 	wr, created = WebResource.objects.get_or_create(url = url)
 	if created or force:
 		# print "Parsing and Caching {0}".format(url)
-		a = newspaper.Article(url)
 		try:
+			a = newspaper.Article(url)
 			a.download()
 			a.parse()
 			text = a.text
@@ -219,11 +221,11 @@ def find_similarity(results = []):
 						# similarity = len(matched_sentences)/(source_len+dest_len-len(matched_sentences))
 
 					if similarity > 0.3 and similarity < 0.8:
-						print "Similar  document {0}[{1}] {2}[{3}] [{4}][{5}]".format(source[:10], source_len, dest[:10], dest_len, similarity, len(matched_sentences))
+						print "Similar  document [{1} s]{0} [{3} s]{2} [{4}] sim[{5} match s]".format(source[:10], source_len, dest[:10], dest_len, similarity, len(matched_sentences))
 					elif similarity >= 0.8 and similarity < 1.0:
-						print "Highly-P documents {0}[{1}] {2}[{3}] [{4}][{5}]".format(source[:10], source_len, dest[:10], dest_len, similarity, len(matched_sentences))
+						print "Highly-Plagarised documents [{1} s]{0} [{3} s]{2} [{4}] sim[{5} match s]".format(source[:10], source_len, dest[:10], dest_len, similarity, len(matched_sentences))
 					elif similarity ==1:
-						print "Exactly-P documents {0}[{1}] {2}[{3}] [{4}][{5}]".format(source[:10], source_len, dest[:10], dest_len, similarity, len(matched_sentences))
+						print "Exactly-Plagarised documents [{1} s]{0} [{3} s]{2} [{4}] sim[{5} match s]".format(source[:10], source_len, dest[:10], dest_len, similarity, len(matched_sentences))
 
 					if similarity > 0.4 and similarity < 1:
 						list_of_sim_docs.append({
@@ -272,7 +274,9 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 
 	for index, i in enumerate(all_results):
 		try:
-			wr = WebResource.objects.get(url = i)
+			wr, created = WebResource.objects.get_or_create(url = i)
+			if created:
+  				wr = parseURL(i, True)
 			data = {'url' : i}
 			keywords = [w for w in count(wr.text, top = 10, stemmer = LEMMA) if w not in stop]
 
@@ -305,7 +309,6 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 
 			data_to_be_written.append(data)
 		except Exception as e:
-			print "ERROR"
 			print e
 
 	print "Response Result model Prepared"
