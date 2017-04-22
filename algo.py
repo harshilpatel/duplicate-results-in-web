@@ -144,8 +144,6 @@ def calc(item = items.first()):
                     # file.write("Source: [{0}]{1} + Target: [{2}]{3} - similarity: {4}\n".format(r1_count,r1.url, r_count,r.url, similarity))
                     # file2.write("Source: [{0}]{1} + Target: [{2}]{3} - similarity: {4}\n".format(r1_count,r1.url[:20], r_count,r.url[:20], similarity))
 
-            # print r_count
-
 # file.close()
 # file2.close()
 
@@ -155,13 +153,11 @@ def analyse(items = [items.first()]):
         print "Test Query: "+item.queryText
         result = get_results(item.queryText, 50, force = False, news = False, analysis = True)
 
-        # calc(item)
+        calc(item)
         for i in result:
             if i.get('type')=='similar' and i.get('score')>threshold:
                 pass
-                # print "RESULTS: {0} {1} - {2} words".format(i.get('source')[:30], i.get('dest')[:30], i.get('score'))
-
-# calc()
+                print "RESULTS: {0} {1} - {2} words".format(i.get('source')[:30], i.get('dest')[:30], i.get('score'))
 
 if len(sys.argv) == 3:
     analyse([items[int(sys.argv[2])]])

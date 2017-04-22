@@ -47,7 +47,7 @@ app.controller('search', function($scope, $timeout, QUERY, history){
 
 	$scope.search = function(){
 		$("#submitQuery").removeClass('btn-danger');
-		$("#submitQuery").addClass('disabled')
+		// $("#submitQuery").addClass('disabled')
 		if($scope.query.length > 0){
 			// $("#submitQuery").attr('disabled', 'disabled');
 			$("#submitQuery").addClass('btn-warning');

@@ -28,10 +28,13 @@ from pattern.web import plaintext, find_urls, strip_between
 # driver = webdriver.Chrome()
 # driver.set_window_size(0,0)
 
+# similar_sentence_threshold = 0.4
+# similar_articles = 0.7
+
 def parseURL(url, force = False):
 	"Parses the given url and saves it to Database"
 	try:
-		wr, created = WebResource.objects.get_or_create(url = url)
+		wr = WebResource.objects.get(url = url)
 	except MultipleObjectsReturned:
 		WebResource.objects.filter(url = url).delete()
 	except:
@@ -60,6 +63,7 @@ def parseURL(url, force = False):
 	return wr
 
 def getGoogleResults(query, quantity, news = False, force = False):
+	news = False
 	all_results = []
 	query = query.replace('_','%20')
 	breakdown = 50
@@ -108,10 +112,11 @@ def getGoogleResults(query, quantity, news = False, force = False):
 							all_results.append(url)
 			driver.close()
 
+	print 'Received {0} results'.format(len(all_results))
 	queue = [] # Queue to line up Processes and run them later as required
 
 	for i in all_results:
-		# print "Adding to Queue:", i
+		print "Adding to Queue:", i
 		queue.append(Process(target=parseURL, args=(i, force)))
 
 	# Run the queued Processes
@@ -186,7 +191,7 @@ def get_similar_rows(model = np.array((1,1)), sentences = [], sentence_dict = {}
 			
 			score = match_rows(model[i], model[j])
 
-			if score > 0.8:
+			if score > 0.7:
 				similar_rows.append([i,j])
 				# print sentences[i]
 				# print sentences[j]
@@ -220,7 +225,7 @@ def find_similarity(results = []):
 						similarity = len(matched_sentences)/min([dest_len, source_len])
 						# similarity = len(matched_sentences)/(source_len+dest_len-len(matched_sentences))
 
-					if similarity > 0.3 and similarity < 0.8:
+					if similarity > 0.4 and similarity < 0.8:
 						print "Similar  document [{1} s]{0} [{3} s]{2} [{4}] sim[{5} match s]".format(source[:10], source_len, dest[:10], dest_len, similarity, len(matched_sentences))
 					elif similarity >= 0.8 and similarity < 1.0:
 						print "Highly-Plagarised documents [{1} s]{0} [{3} s]{2} [{4}] sim[{5} match s]".format(source[:10], source_len, dest[:10], dest_len, similarity, len(matched_sentences))
@@ -302,8 +307,8 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 
 			data['plaintext'] = data['text'].split('\n')
 
-			while '' in data['plaintext']:
-				data['plaintext'].remove('')
+			# while '' in data['plaintext']:
+			# 	data['plaintext'].remove('')
 
 			# knowledgeKeywords.extend(data['keywords'])
 
@@ -320,6 +325,8 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 	for i in list_of_sim_docs:
 		similar = {
 			'type' : 'similar',
+			's' : i.get('source'),
+			'd' : i.get('dest'),
 			'source' : i.get('source'),
 			'dest' : i.get('dest'),
 			'score' : i.get('score'),
@@ -444,7 +451,41 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 		})
 
 
-	print "Time Taken to get results [Cached/new] {0} ".format((datetime.now() - start).seconds)
+	# print "Time Taken to get results [Cached/new] {0} ".format((datetime.now() - start).seconds)
 
+	result = {}
+	for i in data_to_be_written:
+		if i.get('type') in ['result', 'duplicate']:
+			url = i.get('url')
+			index = int(i.get('index'))
+
+			result[index] = [1 for r in data_to_be_written if r.get('type') == 'similar' and r['source'] == url]
+
+	result2 = [i for i,j in result.iteritems()]
+	result3 = [len(j) for i,j in result.iteritems()]
+	# for i in data_to_be_written:
+	# 	if i.get('type') == 'similar':
+	# 		# result.append([i.get('source'), i.get('dest'), i.get('score')])
+	# 		s = i.get('source')
+	# 		d = i.get('dest')
+
+	# 		result[s].append(1)
+
+	# for i,j in result.iteritems():
+	# 	if i and j:
+	# 		try:
+	# 			result2.append(int(i))
+	# 			result3.append(int(len(j)))
+	# 		except: pass
+	import matplotlib.pyplot as plt
+	print "Plot prepared"
+	print result2
+	print result3
+	plt.plot([i for i in result2], [0 for i in result3], 'ro')
+	try:
+		plt.bar(result2, result3, width=0.8, color='r')
+		plt.show()
+	except: pass
+	# plt.show()
 
 	return data_to_be_written

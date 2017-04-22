@@ -11,7 +11,7 @@
           </select>
          </div> -->
          <div class="col-lg-1">
-          <input type="number" class="form-control" value="10" ng-model="queryQuantity">
+          <input type="number" min="1" class="form-control" value="10" ng-model="queryQuantity">
          </div>
          <div class="col-lg-1">
           <label class="control-label"><input type="checkbox" ng-model="queryForce" placeholder="Force"/>&nbsp;&nbsp;&nbsp;Force</label>
@@ -30,7 +30,7 @@
          </div>
         </div>
         <hr>
-         <div class="col-lg-12" style="height:100%; overflow-y: scroll; border-left: black 2px solid" ng-if="results.length>0&&!visibleAnalysis">
+         <div id="googleOnlyWideResults" class="col-lg-12" style="height:100%; overflow-y: scroll; border-left: black 2px solid" ng-if="results.length>0&&!visibleAnalysis">
             <div class="panel panel-default">
                 <div class="panel-body">
                      <div class="col-lg-12" ng-if="results.length > 0">
