@@ -1,4 +1,5 @@
 from __future__ import division
+import matplotlib.pyplot as plt
 import math
 import os, requests, sys, string
 from bs4 import BeautifulSoup
@@ -25,11 +26,18 @@ from pattern.en import parse, wordnet
 from pattern.vector import words, count, PORTER, Document, Model, KMEANS, LEMMA, TFIDF, HIERARCHICAL
 from pattern.web import plaintext, find_urls, strip_between
 
-# driver = webdriver.Chrome()
-# driver.set_window_size(0,0)
-
 # similar_sentence_threshold = 0.4
 # similar_articles = 0.7
+
+def plot_graph(a,b):
+	try:
+		plt.plot([i for i in a], [0 for i in b], 'ro')
+		plt.bar(a, b, width=0.8, color='r')
+		plt.show()
+	except:
+		print "Plotting Failed"
+		pass
+
 
 def parseURL(url, force = False):
 	"Parses the given url and saves it to Database"
@@ -451,8 +459,6 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 		})
 
 
-	# print "Time Taken to get results [Cached/new] {0} ".format((datetime.now() - start).seconds)
-
 	result = {}
 	for i in data_to_be_written:
 		if i.get('type') in ['result', 'duplicate']:
@@ -463,29 +469,7 @@ def get_results(query, quantity, force = False, news = False, analysis = True):
 
 	result2 = [i for i,j in result.iteritems()]
 	result3 = [len(j) for i,j in result.iteritems()]
-	# for i in data_to_be_written:
-	# 	if i.get('type') == 'similar':
-	# 		# result.append([i.get('source'), i.get('dest'), i.get('score')])
-	# 		s = i.get('source')
-	# 		d = i.get('dest')
-
-	# 		result[s].append(1)
-
-	# for i,j in result.iteritems():
-	# 	if i and j:
-	# 		try:
-	# 			result2.append(int(i))
-	# 			result3.append(int(len(j)))
-	# 		except: pass
-	import matplotlib.pyplot as plt
-	print "Plot prepared"
-	print result2
-	print result3
-	plt.plot([i for i in result2], [0 for i in result3], 'ro')
-	try:
-		plt.bar(result2, result3, width=0.8, color='r')
-		plt.show()
-	except: pass
-	# plt.show()
+	
+	Process(target=plot_graph, args=(result2, result3)).start()
 
 	return data_to_be_written
