@@ -1,4 +1,4 @@
-*sqlite3
+*.sqlite3
 env
 *.pyc
 # Elastic Beanstalk Files
@@ -9,3 +9,4 @@ env3
 
 *.zip
 *.rar
+*.pdf
